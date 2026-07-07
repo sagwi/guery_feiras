@@ -3,6 +3,7 @@ import AuthLayout from './layouts/AuthLayout'
 import AppLayout from './layouts/AppLayout'
 import ProtectedRoute from './routes/ProtectedRoute'
 import Placeholder from './pages/Placeholder'
+import Signup from './pages/Signup'
 
 function App() {
   return (
@@ -12,8 +13,7 @@ function App() {
       <Route element={<AuthLayout />}>
         {/* TODO Task 5/6: real page */}
         <Route path="/login" element={<Placeholder titulo="Login" />} />
-        {/* TODO Task 5/6: real page */}
-        <Route path="/signup" element={<Placeholder titulo="Cadastro" />} />
+        <Route path="/signup" element={<Signup />} />
         {/* TODO Task 5/6: real page */}
         <Route path="/recuperar-senha" element={<Placeholder titulo="Recuperar Senha" />} />
       </Route>

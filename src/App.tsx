@@ -3,6 +3,7 @@ import AuthLayout from './layouts/AuthLayout'
 import AppLayout from './layouts/AppLayout'
 import ProtectedRoute from './routes/ProtectedRoute'
 import Placeholder from './pages/Placeholder'
+import VendorPanel from './pages/VendorPanel'
 import Signup from './pages/Signup'
 import Login from './pages/Login'
 import RecuperarSenha from './pages/RecuperarSenha'
@@ -21,7 +22,7 @@ function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route path="/VendorPanel" element={<Placeholder titulo="Painel do Vendedor" />} />
+          <Route path="/VendorPanel" element={<VendorPanel />} />
           <Route path="/VendorBusinesses" element={<Placeholder titulo="Meus Negócios" />} />
           <Route path="/VendorApply" element={<Placeholder titulo="Nova Inscrição" />} />
           <Route path="/VendorPayments" element={<Placeholder titulo="Pagamentos" />} />

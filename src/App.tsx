@@ -6,6 +6,7 @@ import Placeholder from './pages/Placeholder'
 import Signup from './pages/Signup'
 import Login from './pages/Login'
 import RecuperarSenha from './pages/RecuperarSenha'
+import ChangePassword from './pages/ChangePassword'
 
 function App() {
   return (
@@ -25,7 +26,7 @@ function App() {
           <Route path="/VendorApply" element={<Placeholder titulo="Nova Inscrição" />} />
           <Route path="/VendorPayments" element={<Placeholder titulo="Pagamentos" />} />
           <Route path="/VendorWallet" element={<Placeholder titulo="Carteira" />} />
-          <Route path="/ChangePassword" element={<Placeholder titulo="Alterar Senha" />} />
+          <Route path="/ChangePassword" element={<ChangePassword />} />
           <Route path="/VendorManual" element={<Placeholder titulo="Manual" />} />
         </Route>
       </Route>

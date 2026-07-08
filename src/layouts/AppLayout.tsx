@@ -1,15 +1,30 @@
+import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
+import { useIdleLogout } from '../auth/useIdleLogout'
+import ReportarProblemaButton from '../components/ReportarProblemaButton'
+import CookieBanner from '../components/CookieBanner'
+import Sidebar from './Sidebar'
+import Topbar from './Topbar'
 
-// ponytail: shell only — Task 8 adds a real Sidebar/Topbar (cookie de negócio ativo, relatório etc.)
 export default function AppLayout() {
+  useIdleLogout()
+  const [collapsed, setCollapsed] = useState(false)
+
   return (
-    <div className="min-h-screen flex">
-      <aside className="w-56 bg-white border-r border-marca-roxo/10 p-4">
-        <span className="text-marca-roxo font-bold">Guery Feiras</span>
-      </aside>
-      <main className="flex-1 p-6">
-        <Outlet />
-      </main>
+    <div className="flex min-h-screen">
+      <div className={collapsed ? 'w-16' : 'w-56'}>
+        <Sidebar collapsed={collapsed} />
+      </div>
+
+      <div className="flex flex-1 flex-col">
+        <Topbar collapsed={collapsed} onToggleCollapsed={() => setCollapsed((v) => !v)} />
+        <main className="flex-1 bg-marca-roxo/5 p-6">
+          <Outlet />
+        </main>
+      </div>
+
+      <ReportarProblemaButton />
+      <CookieBanner />
     </div>
   )
 }

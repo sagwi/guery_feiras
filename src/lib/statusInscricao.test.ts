@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { podeCurar, transicaoCuradoria, podePagar, transicaoPagamento, STATUS_LABELS } from './statusInscricao'
+import { podeCurar, transicaoCuradoria, podePagar, transicaoPagamento, podeCancelarOrganizador, transicaoCancelamentoOrganizador, geraCreditoAoCancelar, STATUS_LABELS } from './statusInscricao'
 
 describe('podeCurar', () => {
   it('true p/ pendente e em_analise', () => {
@@ -27,6 +27,23 @@ describe('podePagar / transicaoPagamento', () => {
   })
   it('aprovado -> confirmado', () => expect(transicaoPagamento('aprovado')).toBe('confirmado'))
   it('lança se não pagável', () => expect(() => transicaoPagamento('pendente')).toThrow())
+})
+
+describe('cancelamento pelo organizador', () => {
+  it('podeCancelar só p/ aprovado ou confirmado', () => {
+    expect(podeCancelarOrganizador('aprovado')).toBe(true)
+    expect(podeCancelarOrganizador('confirmado')).toBe(true)
+    expect(podeCancelarOrganizador('pendente')).toBe(false)
+    expect(podeCancelarOrganizador('realizada')).toBe(false)
+  })
+  it('transição -> cancelado_organizador; lança se não cancelável', () => {
+    expect(transicaoCancelamentoOrganizador('confirmado')).toBe('cancelado_organizador')
+    expect(() => transicaoCancelamentoOrganizador('pendente')).toThrow()
+  })
+  it('gera crédito só se estava paga (confirmada)', () => {
+    expect(geraCreditoAoCancelar('confirmado')).toBe(true)
+    expect(geraCreditoAoCancelar('aprovado')).toBe(false)
+  })
 })
 
 describe('STATUS_LABELS', () => {

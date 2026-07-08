@@ -4,6 +4,8 @@ import AppLayout from './layouts/AppLayout'
 import ProtectedRoute from './routes/ProtectedRoute'
 import Placeholder from './pages/Placeholder'
 import Signup from './pages/Signup'
+import Login from './pages/Login'
+import RecuperarSenha from './pages/RecuperarSenha'
 
 function App() {
   return (
@@ -11,11 +13,9 @@ function App() {
       <Route path="/" element={<Navigate to="/VendorPanel" replace />} />
 
       <Route element={<AuthLayout />}>
-        {/* TODO Task 5/6: real page */}
-        <Route path="/login" element={<Placeholder titulo="Login" />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        {/* TODO Task 5/6: real page */}
-        <Route path="/recuperar-senha" element={<Placeholder titulo="Recuperar Senha" />} />
+        <Route path="/recuperar-senha" element={<RecuperarSenha />} />
       </Route>
 
       <Route element={<ProtectedRoute />}>

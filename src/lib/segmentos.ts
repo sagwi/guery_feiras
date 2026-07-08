@@ -1,0 +1,37 @@
+// ponytail: strings must match DB CHECK constraints on businesses.segmento / faixa_faturamento character-for-character
+export const SEGMENTOS = [
+  'Acessórios de Moda',
+  'Artes Plásticas',
+  'Artesanato',
+  'Autocuidado',
+  'Bebidas Alcoólicas',
+  'Bem-Estar Pessoal',
+  'Brinquedos',
+  'Calçados e Bolsas',
+  'Confeitaria',
+  'Costura Criativa',
+  'Crochês, tapeçaria, renda e bordado',
+  'Cultura Geek',
+  'Empório de Frios',
+  'Esotérico',
+  'Gastronomia',
+  'Moda Circular',
+  'Moda Fitness',
+  'Moda Praia',
+  'Papelaria',
+  'Pet',
+  'Plantas Ornamentais e Reais',
+  'Produtos Naturais',
+  'Sebo e Vinil',
+  'Serviços',
+  'Sorvetes',
+  'Vestuário',
+] as const
+
+export const FAIXAS_FATURAMENTO = [
+  'Até R$ 1.000',
+  'R$ 1.001 a R$ 3.000',
+  'R$ 3.001 a R$ 5.000',
+  'R$ 5.001 a R$ 10.000',
+  'Acima de R$ 10.000',
+] as const

@@ -1,5 +1,6 @@
-import { PanelLeft, Bell } from 'lucide-react'
+import { PanelLeft } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
+import NotificacoesDropdown from '../components/NotificacoesDropdown'
 
 export default function Topbar({
   collapsed,
@@ -22,17 +23,7 @@ export default function Topbar({
       </button>
 
       <div className="flex items-center gap-4">
-        <button
-          type="button"
-          aria-label="Notificações"
-          className="relative rounded-lg p-2 text-marca-roxo/70 hover:bg-marca-roxo/5 hover:text-marca-roxo"
-        >
-          <Bell className="h-5 w-5" />
-          {/* ponytail: badge fixo em 0 — notificações reais fora do escopo desta fatia */}
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-marca-amarelo text-[10px] font-bold text-marca-roxo">
-            0
-          </span>
-        </button>
+        <NotificacoesDropdown />
 
         <span className="text-sm font-medium text-marca-roxo">
           {profile?.nome ?? 'Comerciante'}

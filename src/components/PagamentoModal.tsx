@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
 import { transicaoPagamento, type StatusInscricao } from '../lib/statusInscricao'
 import { saldo, type WalletTx } from '../lib/carteira'
+import { pagarme, type Pedido, type DadosCartao } from '../lib/pagarme'
 
 export type AplicacaoPagavel = {
   id: string
@@ -19,11 +20,12 @@ const metodoBtn = (ativo: boolean) =>
     ativo ? 'border-marca-roxo bg-marca-roxo/5 text-marca-roxo' : 'border-marca-roxo/20 text-marca-roxo/60'
   }`
 
+const inputCls = 'w-full rounded-lg border border-marca-roxo/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-marca-amarelo'
+
 function formatarMoeda(v: number): string {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-// ponytail: stub — Pagar.me real em fatia futura. QR e copia-e-cola são placeholders visuais.
 export default function PagamentoModal({
   application,
   onPago,
@@ -38,10 +40,12 @@ export default function PagamentoModal({
   const [processando, setProcessando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [saldoDisponivel, setSaldoDisponivel] = useState(0)
+  const [pixPedido, setPixPedido] = useState<Pedido | null>(null)
+  const [cartao, setCartao] = useState<DadosCartao>({ numero: '', nome: '', validade: '', cvv: '' })
+  const confirmadoRef = useRef(false)
 
   const taxa = application.fairs?.taxa ?? 0
   const temCreditoSuficiente = saldoDisponivel >= taxa
-  const copiaECola = `00020126580014BR.GOV.BCB.PIX0136GUERYFEIRAS-FAKE-${application.id.slice(0, 8)}5204000053039865802BR6009SAO PAULO`
 
   useEffect(() => {
     if (!user?.id) return
@@ -52,25 +56,47 @@ export default function PagamentoModal({
       .then(({ data }) => setSaldoDisponivel(saldo((data ?? []) as WalletTx[])))
   }, [user?.id])
 
-  async function simularPagamento() {
-    if (!user?.id) return
+  // PIX: cria o pedido no gateway ao entrar na aba (uma vez).
+  useEffect(() => {
+    if (metodo !== 'pix' || pixPedido) return
+    pagarme.criarPedidoPix({ valor: taxa, refId: application.id }).then(setPixPedido).catch((e) =>
+      setErro(e instanceof Error ? e.message : 'Falha ao gerar cobrança PIX'),
+    )
+  }, [metodo, pixPedido, taxa, application.id])
+
+  // PIX: faz polling da confirmação (no real, o webhook confirma; aqui simulamos com consultarPedido).
+  useEffect(() => {
+    if (!pixPedido || pixPedido.status !== 'pendente') return
+    const t = setInterval(async () => {
+      const atual = await pagarme.consultarPedido(pixPedido.id)
+      if (atual.status === 'pago') {
+        clearInterval(t)
+        confirmarNoBanco('pix')
+      }
+    }, 1500)
+    return () => clearInterval(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pixPedido?.id, pixPedido?.status])
+
+  // Escreve o pagamento no banco quando a cobrança é aprovada. No real isso migra p/ o webhook + RPC.
+  async function confirmarNoBanco(metodoPago: Metodo) {
+    if (!user?.id || confirmadoRef.current) return
+    confirmadoRef.current = true
     setErro(null)
     setProcessando(true)
     try {
       const novoStatus = transicaoPagamento(application.status)
-
       const { error: pagamentoError } = await supabase.from('payments').insert({
         user_id: user.id,
         application_id: application.id,
         valor: taxa,
-        metodo,
+        metodo: metodoPago,
         status: 'confirmado',
         pago_em: new Date().toISOString(),
       })
       if (pagamentoError) throw pagamentoError
 
-      // Pagamento com crédito debita a carteira (saída).
-      if (metodo === 'credito') {
+      if (metodoPago === 'credito') {
         const { error: saidaError } = await supabase.from('wallet_transactions').insert({
           user_id: user.id,
           tipo: 'saida',
@@ -87,11 +113,23 @@ export default function PagamentoModal({
         .eq('id', application.id)
       if (aplicacaoError) throw aplicacaoError
 
-      // ponytail: sem notif de pagamento (policy admin-only) — comerciante vê status confirmado direto.
       onPago()
     } catch (e) {
+      confirmadoRef.current = false
       setErro(e instanceof Error ? e.message : 'Falha ao processar pagamento')
-    } finally {
+      setProcessando(false)
+    }
+  }
+
+  async function pagarCartao() {
+    setErro(null)
+    setProcessando(true)
+    try {
+      const pedido = await pagarme.criarPedidoCartao({ valor: taxa, refId: application.id, cartao })
+      if (pedido.status !== 'pago') throw new Error('Pagamento com cartão recusado. Confira os dados.')
+      await confirmarNoBanco('cartao')
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao processar cartão')
       setProcessando(false)
     }
   }
@@ -126,12 +164,6 @@ export default function PagamentoModal({
             )}
           </div>
 
-          {metodo === 'credito' && (
-            <div className="mb-4 rounded-lg border border-marca-roxo/20 bg-marca-roxo/5 p-3 text-sm text-marca-roxo/80">
-              Usar meu crédito disponível ({formatarMoeda(saldoDisponivel)}). O valor será abatido da sua carteira, sem cobrança PIX/cartão.
-            </div>
-          )}
-
           {metodo === 'pix' && (
             <div className="mb-4 space-y-3">
               {/* QR fake — placeholder visual, não é um QR code real */}
@@ -149,24 +181,70 @@ export default function PagamentoModal({
                 <label className="mb-1 block text-xs font-semibold text-marca-roxo/70">Pix copia e cola</label>
                 <input
                   readOnly
-                  value={copiaECola}
+                  value={pixPedido?.pixCopiaECola ?? 'Gerando cobrança…'}
                   className="w-full truncate rounded-lg border border-marca-roxo/20 bg-marca-roxo/5 px-3 py-2 text-xs text-marca-roxo/70"
                   onFocus={(e) => e.target.select()}
                 />
               </div>
+              <p className="text-center text-xs text-marca-roxo/50">Aguardando confirmação do pagamento…</p>
+            </div>
+          )}
+
+          {metodo === 'cartao' && (
+            <div className="mb-4 space-y-2">
+              <input className={inputCls} placeholder="Número do cartão" value={cartao.numero}
+                onChange={(e) => setCartao({ ...cartao, numero: e.target.value })} />
+              <input className={inputCls} placeholder="Nome impresso" value={cartao.nome}
+                onChange={(e) => setCartao({ ...cartao, nome: e.target.value })} />
+              <div className="flex gap-2">
+                <input className={inputCls} placeholder="Validade MM/AA" value={cartao.validade}
+                  onChange={(e) => setCartao({ ...cartao, validade: e.target.value })} />
+                <input className={inputCls} placeholder="CVV" value={cartao.cvv}
+                  onChange={(e) => setCartao({ ...cartao, cvv: e.target.value })} />
+              </div>
+            </div>
+          )}
+
+          {metodo === 'credito' && (
+            <div className="mb-4 rounded-lg border border-marca-roxo/20 bg-marca-roxo/5 p-3 text-sm text-marca-roxo/80">
+              Usar meu crédito disponível ({formatarMoeda(saldoDisponivel)}). O valor será abatido da sua carteira, sem cobrança PIX/cartão.
             </div>
           )}
 
           {erro && <p className="mb-3 text-sm text-red-600">{erro}</p>}
 
-          <button
-            type="button"
-            disabled={processando}
-            onClick={simularPagamento}
-            className="w-full rounded-lg bg-marca-amarelo px-4 py-2 text-sm font-semibold text-marca-roxo hover:brightness-95 transition disabled:opacity-50"
-          >
-            {processando ? 'Processando...' : metodo === 'credito' ? 'Pagar com crédito' : 'Simular pagamento (dev)'}
-          </button>
+          {metodo === 'pix' && (
+            <button
+              type="button"
+              disabled={processando || !pixPedido}
+              onClick={() => pixPedido && pagarme.simularPagamentoPix(pixPedido.id)}
+              className="w-full rounded-lg bg-marca-amarelo px-4 py-2 text-sm font-semibold text-marca-roxo hover:brightness-95 transition disabled:opacity-50"
+            >
+              {processando ? 'Processando...' : 'Simular pagamento (dev)'}
+            </button>
+          )}
+
+          {metodo === 'cartao' && (
+            <button
+              type="button"
+              disabled={processando}
+              onClick={pagarCartao}
+              className="w-full rounded-lg bg-marca-amarelo px-4 py-2 text-sm font-semibold text-marca-roxo hover:brightness-95 transition disabled:opacity-50"
+            >
+              {processando ? 'Processando...' : 'Pagar com cartão'}
+            </button>
+          )}
+
+          {metodo === 'credito' && (
+            <button
+              type="button"
+              disabled={processando}
+              onClick={() => confirmarNoBanco('credito')}
+              className="w-full rounded-lg bg-marca-amarelo px-4 py-2 text-sm font-semibold text-marca-roxo hover:brightness-95 transition disabled:opacity-50"
+            >
+              {processando ? 'Processando...' : 'Pagar com crédito'}
+            </button>
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

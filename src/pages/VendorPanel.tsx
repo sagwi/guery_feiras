@@ -39,8 +39,8 @@ export default function VendorPanel() {
 
   useEffect(() => { carregarPropostas() }, [carregarPropostas])
 
-  // ponytail: pagamento/participação reais nas fatias 4-6 — por ora derivam do status.
-  const pendencias = propostas.filter((p) => p.status === 'pendente').length
+  // ponytail: participação real (check-in) ainda não existe — Participações deriva do status 'realizada'.
+  const pendencias = propostas.filter((p) => p.status === 'aprovado').length
   const contratosAtivos = propostas.filter((p) => p.status === 'confirmado').length
   const participacoes = propostas.filter((p) => p.status === 'realizada').length
 

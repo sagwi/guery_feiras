@@ -8,6 +8,7 @@ import Placeholder from './pages/Placeholder'
 import VendorPanel from './pages/VendorPanel'
 import VendorBusinesses from './pages/VendorBusinesses'
 import VendorApply from './pages/VendorApply'
+import VendorPayments from './pages/VendorPayments'
 import Signup from './pages/Signup'
 import Login from './pages/Login'
 import RecuperarSenha from './pages/RecuperarSenha'
@@ -31,7 +32,7 @@ function App() {
           <Route path="/VendorPanel" element={<VendorPanel />} />
           <Route path="/VendorBusinesses" element={<VendorBusinesses />} />
           <Route path="/VendorApply" element={<VendorApply />} />
-          <Route path="/VendorPayments" element={<Placeholder titulo="Pagamentos" />} />
+          <Route path="/VendorPayments" element={<VendorPayments />} />
           <Route path="/VendorWallet" element={<Placeholder titulo="Carteira" />} />
           <Route path="/ChangePassword" element={<ChangePassword />} />
           <Route path="/VendorManual" element={<Placeholder titulo="Manual" />} />

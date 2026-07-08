@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Store } from 'lucide-react'
 
 export type Proposta = {
@@ -66,6 +67,14 @@ export default function PropostaCard({ proposta }: { proposta: Proposta }) {
           <span>Data: {formatarDataBR(proposta.data_escolhida)}</span>
           {fair && <span>Taxa: {formatarMoeda(fair.taxa)}</span>}
         </div>
+        {proposta.status === 'aprovado' && (
+          <Link
+            to="/VendorPayments"
+            className="mt-1 inline-block rounded-lg bg-marca-roxo px-3 py-1.5 text-xs font-semibold text-white hover:bg-marca-roxoClaro transition"
+          >
+            Pagar
+          </Link>
+        )}
       </div>
     </div>
   )

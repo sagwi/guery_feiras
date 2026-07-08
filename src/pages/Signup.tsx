@@ -26,6 +26,7 @@ export default function Signup() {
       email: pessoais.email,
       password: pessoais.senha,
       options: {
+        emailRedirectTo: window.location.origin + '/VendorPanel',
         data: {
           nome: pessoais.nome,
           cpf: pessoais.cpf,

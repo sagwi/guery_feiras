@@ -13,6 +13,7 @@ import Login from './pages/Login'
 import RecuperarSenha from './pages/RecuperarSenha'
 import ChangePassword from './pages/ChangePassword'
 import CuradoriaCadastros from './pages/curadoria/CuradoriaCadastros'
+import CuradoriaInscricoes from './pages/curadoria/CuradoriaInscricoes'
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
       <Route element={<AdminRoute />}>
         <Route element={<AdminLayout />}>
           <Route path="/curadoria" element={<CuradoriaCadastros />} />
+          <Route path="/curadoria/inscricoes" element={<CuradoriaInscricoes />} />
         </Route>
       </Route>
 

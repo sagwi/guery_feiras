@@ -3,7 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
-import { transicaoPagamento, type StatusInscricao } from '../lib/statusInscricao'
+import { type StatusInscricao } from '../lib/statusInscricao'
 import { saldo, type WalletTx } from '../lib/carteira'
 import { pagarme, type Pedido, type DadosCartao } from '../lib/pagarme'
 
@@ -78,41 +78,20 @@ export default function PagamentoModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pixPedido?.id, pixPedido?.status])
 
-  // Escreve o pagamento no banco quando a cobrança é aprovada. No real isso migra p/ o webhook + RPC.
+  // Confirma o pagamento atomicamente (payment + carteira + inscrição) via RPC transacional.
+  // No real, essa mesma RPC roda no webhook do Pagar.me (service role) — aqui é chamada pelo client.
   async function confirmarNoBanco(metodoPago: Metodo) {
     if (!user?.id || confirmadoRef.current) return
     confirmadoRef.current = true
     setErro(null)
     setProcessando(true)
     try {
-      const novoStatus = transicaoPagamento(application.status)
-      const { error: pagamentoError } = await supabase.from('payments').insert({
-        user_id: user.id,
-        application_id: application.id,
-        valor: taxa,
-        metodo: metodoPago,
-        status: 'confirmado',
-        pago_em: new Date().toISOString(),
+      const { error } = await supabase.rpc('confirmar_pagamento', {
+        p_application_id: application.id,
+        p_metodo: metodoPago,
+        p_valor: taxa,
       })
-      if (pagamentoError) throw pagamentoError
-
-      if (metodoPago === 'credito') {
-        const { error: saidaError } = await supabase.from('wallet_transactions').insert({
-          user_id: user.id,
-          tipo: 'saida',
-          valor: taxa,
-          referencia: `Uso de crédito: ${application.fairs?.nome ?? 'feira'}`,
-          application_id: application.id,
-        })
-        if (saidaError) throw saidaError
-      }
-
-      const { error: aplicacaoError } = await supabase
-        .from('applications')
-        .update({ status: novoStatus })
-        .eq('id', application.id)
-      if (aplicacaoError) throw aplicacaoError
-
+      if (error) throw error
       onPago()
     } catch (e) {
       confirmadoRef.current = false

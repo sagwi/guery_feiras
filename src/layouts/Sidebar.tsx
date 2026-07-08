@@ -8,10 +8,13 @@ import {
   KeyRound,
   BookOpen,
   LogOut,
+  type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 
-const itens = [
+export type ItemMenu = { to: string; label: string; icon: LucideIcon }
+
+const itensVendor: ItemMenu[] = [
   { to: '/VendorPanel', label: 'Painel', icon: LayoutDashboard },
   { to: '/VendorBusinesses', label: 'Meus negócios', icon: Building2 },
   { to: '/VendorApply', label: 'Nova Inscrição', icon: FileText },
@@ -25,7 +28,7 @@ const linkBase = 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medi
 const linkInativo = 'text-marca-roxo/70 hover:bg-marca-roxo/5 hover:text-marca-roxo'
 const linkAtivo = 'bg-marca-roxo/10 text-marca-roxo'
 
-export default function Sidebar({ collapsed }: { collapsed: boolean }) {
+export default function Sidebar({ collapsed, itens = itensVendor }: { collapsed: boolean; itens?: ItemMenu[] }) {
   const { signOut } = useAuth()
   const navigate = useNavigate()
 

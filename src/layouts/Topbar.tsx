@@ -5,9 +5,11 @@ import NotificacoesDropdown from '../components/NotificacoesDropdown'
 export default function Topbar({
   collapsed,
   onToggleCollapsed,
+  role = 'Comerciante',
 }: {
   collapsed: boolean
   onToggleCollapsed: () => void
+  role?: string
 }) {
   const { profile } = useAuth()
 
@@ -26,7 +28,7 @@ export default function Topbar({
         <NotificacoesDropdown />
 
         <span className="text-sm font-medium text-marca-roxo">
-          {profile?.nome ?? 'Comerciante'}
+          {profile?.nome ?? role}
         </span>
       </div>
     </header>

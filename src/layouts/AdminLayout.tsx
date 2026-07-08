@@ -1,31 +1,29 @@
-import { NavLink, Outlet } from 'react-router-dom'
-import { useAuth } from '../auth/AuthProvider'
+import { useState } from 'react'
+import { Outlet } from 'react-router-dom'
+import { Users, ClipboardCheck } from 'lucide-react'
+import Sidebar from './Sidebar'
+import Topbar from './Topbar'
 
-const navLink =
-  'text-sm font-medium text-marca-roxo/70 hover:text-marca-roxo transition [&.active]:text-marca-roxo [&.active]:font-semibold'
+const itensAdmin = [
+  { to: '/curadoria', label: 'Cadastros', icon: Users },
+  { to: '/curadoria/inscricoes', label: 'Inscrições', icon: ClipboardCheck },
+]
 
 export default function AdminLayout() {
-  const { signOut } = useAuth()
+  const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <div className="min-h-screen bg-marca-roxo/5">
-      <header className="flex items-center justify-between border-b border-marca-roxo/10 bg-white px-6 py-4">
-        <h1 className="text-lg font-bold text-marca-roxo">Curadoria — Guery Feiras</h1>
-        <nav className="flex items-center gap-6">
-          <NavLink to="/curadoria" className={({ isActive }) => (isActive ? `${navLink} active` : navLink)}>
-            Cadastros
-          </NavLink>
-          <NavLink to="/curadoria/inscricoes" className={({ isActive }) => (isActive ? `${navLink} active` : navLink)}>
-            Inscrições
-          </NavLink>
-          <button onClick={signOut} className="text-sm font-medium text-marca-roxo/70 hover:text-marca-roxo transition">
-            Sair
-          </button>
-        </nav>
-      </header>
-      <main className="p-6">
-        <Outlet />
-      </main>
+    <div className="flex min-h-screen">
+      <div className={collapsed ? 'w-16' : 'w-56'}>
+        <Sidebar collapsed={collapsed} itens={itensAdmin} />
+      </div>
+
+      <div className="flex flex-1 flex-col">
+        <Topbar collapsed={collapsed} onToggleCollapsed={() => setCollapsed((v) => !v)} role="Curador" />
+        <main className="flex-1 bg-marca-roxo/5 p-6">
+          <Outlet />
+        </main>
+      </div>
     </div>
   )
 }

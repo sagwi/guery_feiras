@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { STATUS_LABELS, transicaoCuradoria, type StatusInscricao } from '../../lib/statusInscricao'
+import { STATUS_LABELS, transicaoCuradoria, transicaoCancelamentoOrganizador, geraCreditoAoCancelar, type StatusInscricao } from '../../lib/statusInscricao'
 
 type Inscricao = {
   id: string
@@ -31,6 +31,7 @@ function formatarMoeda(v: number): string {
 
 export default function CuradoriaInscricoes() {
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([])
+  const [ativas, setAtivas] = useState<Inscricao[]>([])
   const [perfis, setPerfis] = useState<Record<string, Perfil>>({})
   const [loading, setLoading] = useState(true)
   const [reprovandoId, setReprovandoId] = useState<string | null>(null)
@@ -40,22 +41,33 @@ export default function CuradoriaInscricoes() {
 
   const carregar = useCallback(async () => {
     setLoading(true)
-    const { data, error } = await supabase
-      .from('applications')
-      .select('*, businesses(nome), fairs(nome,taxa,parks(nome))')
-      .in('status', ['pendente', 'em_analise'])
-      .order('criado_em')
-    if (error) {
-      console.error('CuradoriaInscricoes: falha ao carregar inscrições', error)
-      setErro('Falha ao carregar inscrições: ' + error.message)
+    const [pendentesRes, ativasRes] = await Promise.all([
+      supabase
+        .from('applications')
+        .select('*, businesses(nome), fairs(nome,taxa,parks(nome))')
+        .in('status', ['pendente', 'em_analise'])
+        .order('criado_em'),
+      supabase
+        .from('applications')
+        .select('*, businesses(nome), fairs(nome,taxa,parks(nome))')
+        .in('status', ['aprovado', 'confirmado'])
+        .order('criado_em'),
+    ])
+    if (pendentesRes.error || ativasRes.error) {
+      const e = pendentesRes.error ?? ativasRes.error!
+      console.error('CuradoriaInscricoes: falha ao carregar inscrições', e)
+      setErro('Falha ao carregar inscrições: ' + e.message)
       setInscricoes([])
+      setAtivas([])
       setLoading(false)
       return
     }
-    const lista = (data ?? []) as Inscricao[]
+    const lista = (pendentesRes.data ?? []) as Inscricao[]
+    const listaAtivas = (ativasRes.data ?? []) as Inscricao[]
     setInscricoes(lista)
+    setAtivas(listaAtivas)
 
-    const userIds = [...new Set(lista.map((i) => i.user_id))]
+    const userIds = [...new Set([...lista, ...listaAtivas].map((i) => i.user_id))]
     if (userIds.length > 0) {
       const { data: perfisData, error: perfisError } = await supabase
         .from('profiles')
@@ -103,6 +115,49 @@ export default function CuradoriaInscricoes() {
     setProcessandoId(null)
     setReprovandoId(null)
     setMotivo('')
+  }
+
+  async function cancelarPeloOrganizador(inscricao: Inscricao) {
+    setErro(null)
+    setProcessandoId(inscricao.id)
+    const novoStatus = transicaoCancelamentoOrganizador(inscricao.status)
+    const { error } = await supabase.from('applications').update({ status: novoStatus }).eq('id', inscricao.id)
+    if (error) {
+      setErro('Falha ao cancelar data: ' + error.message)
+      setProcessandoId(null)
+      return
+    }
+
+    // Crédito só se a data estava paga (confirmada): valor exato do pagamento confirmado.
+    if (geraCreditoAoCancelar(inscricao.status)) {
+      const { data: pags } = await supabase
+        .from('payments')
+        .select('valor')
+        .eq('application_id', inscricao.id)
+        .eq('status', 'confirmado')
+      const valor = (pags ?? []).reduce((acc, p) => acc + Number(p.valor), 0)
+      if (valor > 0) {
+        await supabase.from('wallet_transactions').insert({
+          user_id: inscricao.user_id,
+          tipo: 'entrada',
+          valor,
+          referencia: `Crédito: ${inscricao.fairs?.nome ?? 'feira'} cancelada pelo organizador`,
+          application_id: inscricao.id,
+        })
+      }
+    }
+
+    await supabase.from('notifications').insert({
+      user_id: inscricao.user_id,
+      tipo: 'feira_cancelada',
+      titulo: 'Feira cancelada pelo organizador',
+      corpo: geraCreditoAoCancelar(inscricao.status)
+        ? 'Uma data que você pagou foi cancelada. Um crédito foi gerado na sua carteira.'
+        : 'Uma data da sua inscrição foi cancelada pelo organizador.',
+    })
+
+    setAtivas((prev) => prev.filter((i) => i.id !== inscricao.id))
+    setProcessandoId(null)
   }
 
   if (loading) return <p className="text-sm text-marca-roxo/60">Carregando…</p>
@@ -182,6 +237,42 @@ export default function CuradoriaInscricoes() {
                   </button>
                 </div>
               )}
+            </div>
+          )
+        })}
+      </div>
+
+      <h2 className="pt-4 text-lg font-bold text-marca-roxo">Datas ativas</h2>
+      <p className="text-sm text-marca-roxo/70">Cancelar uma data já paga gera crédito automático na carteira do comerciante.</p>
+
+      {ativas.length === 0 && (
+        <p className="py-6 text-center text-sm text-marca-roxo/60">Nenhuma data ativa.</p>
+      )}
+
+      <div className="space-y-3">
+        {ativas.map((i) => {
+          const statusInfo = STATUS_LABELS[i.status]
+          const perfil = perfis[i.user_id]
+          return (
+            <div key={i.id} className={card}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-semibold text-marca-roxo">{i.fairs?.nome ?? '—'}</p>
+                <span className={`${badge} ${statusInfo.cor}`}>{statusInfo.label}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm text-marca-roxo md:grid-cols-4">
+                <div><span className="text-marca-roxo/60">Parque:</span> {i.fairs?.parks?.nome ?? '—'}</div>
+                <div><span className="text-marca-roxo/60">Inscrito:</span> {perfil?.nome ?? perfil?.email ?? i.user_id}</div>
+                <div><span className="text-marca-roxo/60">Data:</span> {formatarDataBR(i.data_escolhida)}</div>
+                {i.fairs && <div><span className="text-marca-roxo/60">Taxa:</span> {formatarMoeda(i.fairs.taxa)}</div>}
+              </div>
+              <button
+                type="button"
+                className={botaoReprovar}
+                disabled={processandoId === i.id}
+                onClick={() => cancelarPeloOrganizador(i)}
+              >
+                {processandoId === i.id ? 'Cancelando...' : 'Cancelar data'}
+              </button>
             </div>
           )
         })}

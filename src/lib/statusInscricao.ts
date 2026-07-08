@@ -39,3 +39,19 @@ export function transicaoPagamento(atual: StatusInscricao): StatusInscricao {
   if (!podePagar(atual)) throw new Error(`Inscrição em '${atual}' não pode ser paga`)
   return 'confirmado'
 }
+
+// Organizador só cancela data ainda ativa (aprovada ou confirmada).
+export function podeCancelarOrganizador(status: StatusInscricao): boolean {
+  return status === 'aprovado' || status === 'confirmado'
+}
+
+// Cancelamento pelo organizador -> cancelado_organizador. Lança se não cancelável.
+export function transicaoCancelamentoOrganizador(atual: StatusInscricao): StatusInscricao {
+  if (!podeCancelarOrganizador(atual)) throw new Error(`Inscrição em '${atual}' não pode ser cancelada pelo organizador`)
+  return 'cancelado_organizador'
+}
+
+// Gera crédito só se a data já estava paga (confirmada) ao ser cancelada.
+export function geraCreditoAoCancelar(atual: StatusInscricao): boolean {
+  return atual === 'confirmado'
+}

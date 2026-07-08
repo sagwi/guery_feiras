@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
 import { transicaoPagamento, type StatusInscricao } from '../lib/statusInscricao'
+import { saldo, type WalletTx } from '../lib/carteira'
 
 export type AplicacaoPagavel = {
   id: string
@@ -11,7 +12,7 @@ export type AplicacaoPagavel = {
   fairs: { nome: string; taxa: number } | null
 }
 
-type Metodo = 'pix' | 'cartao'
+type Metodo = 'pix' | 'cartao' | 'credito'
 
 const metodoBtn = (ativo: boolean) =>
   `flex-1 rounded-lg border py-2 text-sm font-semibold transition ${
@@ -36,9 +37,20 @@ export default function PagamentoModal({
   const [metodo, setMetodo] = useState<Metodo>('pix')
   const [processando, setProcessando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const [saldoDisponivel, setSaldoDisponivel] = useState(0)
 
   const taxa = application.fairs?.taxa ?? 0
+  const temCreditoSuficiente = saldoDisponivel >= taxa
   const copiaECola = `00020126580014BR.GOV.BCB.PIX0136GUERYFEIRAS-FAKE-${application.id.slice(0, 8)}5204000053039865802BR6009SAO PAULO`
+
+  useEffect(() => {
+    if (!user?.id) return
+    supabase
+      .from('wallet_transactions')
+      .select('tipo,valor')
+      .eq('user_id', user.id)
+      .then(({ data }) => setSaldoDisponivel(saldo((data ?? []) as WalletTx[])))
+  }, [user?.id])
 
   async function simularPagamento() {
     if (!user?.id) return
@@ -56,6 +68,18 @@ export default function PagamentoModal({
         pago_em: new Date().toISOString(),
       })
       if (pagamentoError) throw pagamentoError
+
+      // Pagamento com crédito debita a carteira (saída).
+      if (metodo === 'credito') {
+        const { error: saidaError } = await supabase.from('wallet_transactions').insert({
+          user_id: user.id,
+          tipo: 'saida',
+          valor: taxa,
+          referencia: `Uso de crédito: ${application.fairs?.nome ?? 'feira'}`,
+          application_id: application.id,
+        })
+        if (saidaError) throw saidaError
+      }
 
       const { error: aplicacaoError } = await supabase
         .from('applications')
@@ -95,7 +119,18 @@ export default function PagamentoModal({
             <button type="button" className={metodoBtn(metodo === 'cartao')} onClick={() => setMetodo('cartao')}>
               Cartão
             </button>
+            {temCreditoSuficiente && (
+              <button type="button" className={metodoBtn(metodo === 'credito')} onClick={() => setMetodo('credito')}>
+                Crédito
+              </button>
+            )}
           </div>
+
+          {metodo === 'credito' && (
+            <div className="mb-4 rounded-lg border border-marca-roxo/20 bg-marca-roxo/5 p-3 text-sm text-marca-roxo/80">
+              Usar meu crédito disponível ({formatarMoeda(saldoDisponivel)}). O valor será abatido da sua carteira, sem cobrança PIX/cartão.
+            </div>
+          )}
 
           {metodo === 'pix' && (
             <div className="mb-4 space-y-3">
@@ -130,7 +165,7 @@ export default function PagamentoModal({
             onClick={simularPagamento}
             className="w-full rounded-lg bg-marca-amarelo px-4 py-2 text-sm font-semibold text-marca-roxo hover:brightness-95 transition disabled:opacity-50"
           >
-            {processando ? 'Processando...' : 'Simular pagamento (dev)'}
+            {processando ? 'Processando...' : metodo === 'credito' ? 'Pagar com crédito' : 'Simular pagamento (dev)'}
           </button>
         </Dialog.Content>
       </Dialog.Portal>

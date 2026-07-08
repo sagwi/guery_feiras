@@ -12,11 +12,17 @@ export async function completarOnboarding(userId: string): Promise<void> {
   const raw = localStorage.getItem('gf_onboarding')
   if (!raw) return
 
-  const { data: existente } = await supabase
+  const { data: existente, error: checkError } = await supabase
     .from('businesses')
     .select('id')
     .eq('user_id', userId)
     .limit(1)
+
+  if (checkError) {
+    // guarda de idempotência falhou — não insira às cegas (evita business duplicado); mantém a chave p/ retry
+    console.error('completarOnboarding: falha ao checar business existente', checkError)
+    return
+  }
 
   if (existente && existente.length > 0) {
     localStorage.removeItem('gf_onboarding')

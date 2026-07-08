@@ -22,7 +22,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!session?.user) { setProfile(null); return }
     supabase.from('profiles').select('id,nome,curadoria_status,email').eq('id', session.user.id).single()
-      .then(({ data }) => setProfile(data as Profile))
+      .then(({ data, error }) => {
+        if (error) { console.error('AuthProvider: falha ao carregar profile', error); setProfile(null); return }
+        setProfile(data as Profile)
+      })
   }, [session?.user?.id])
 
   const signOut = async () => { await supabase.auth.signOut() }

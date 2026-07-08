@@ -4,7 +4,7 @@ import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 
 type Profile = { id: string; nome: string | null; curadoria_status: string; email: string | null }
-type Ctx = { session: Session|null; user: User|null; profile: Profile|null; loading: boolean; signOut: ()=>Promise<void> }
+type Ctx = { session: Session|null; user: User|null; profile: Profile|null; isAdmin: boolean; loading: boolean; signOut: ()=>Promise<void> }
 const AuthCtx = createContext<Ctx>(null!)
 export const useAuth = () => useContext(AuthCtx)
 
@@ -29,5 +29,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session?.user?.id])
 
   const signOut = async () => { await supabase.auth.signOut() }
-  return <AuthCtx.Provider value={{ session, user: session?.user ?? null, profile, loading, signOut }}>{children}</AuthCtx.Provider>
+  const isAdmin = session?.user?.app_metadata?.gf_admin === true
+  return <AuthCtx.Provider value={{ session, user: session?.user ?? null, profile, isAdmin, loading, signOut }}>{children}</AuthCtx.Provider>
 }

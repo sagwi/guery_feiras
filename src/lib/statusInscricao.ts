@@ -28,3 +28,14 @@ export function transicaoCuradoria(
   if (!podeCurar(atual)) throw new Error(`Inscrição em '${atual}' não pode ser curada`)
   return decisao === 'aprovar' ? 'aprovado' : 'reprovado'
 }
+
+// Só inscrições aprovadas (e ainda não pagas) podem ser pagas.
+export function podePagar(status: StatusInscricao): boolean {
+  return status === 'aprovado'
+}
+
+// Transição de pagamento: aprovado -> confirmado. Lança se não pagável.
+export function transicaoPagamento(atual: StatusInscricao): StatusInscricao {
+  if (!podePagar(atual)) throw new Error(`Inscrição em '${atual}' não pode ser paga`)
+  return 'confirmado'
+}

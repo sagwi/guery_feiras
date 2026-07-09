@@ -28,7 +28,7 @@ export default function Login() {
     setLoading(true)
     setErro(null)
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha })
 
     if (error) {
       if (
@@ -43,7 +43,8 @@ export default function Login() {
       return
     }
 
-    navigate('/VendorPanel')
+    const isAdmin = data.user?.app_metadata?.gf_admin === true
+    navigate(isAdmin ? '/curadoria' : '/VendorPanel')
   }
 
   return (

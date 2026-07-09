@@ -14,14 +14,14 @@ export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen overflow-hidden">
       <div className={collapsed ? 'w-16' : 'w-56'}>
         <Sidebar collapsed={collapsed} itens={itensAdmin} />
       </div>
 
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar collapsed={collapsed} onToggleCollapsed={() => setCollapsed((v) => !v)} role="Curador" />
-        <main className="flex-1 bg-marca-creme p-7">
+        <main className="flex-1 overflow-y-auto bg-marca-creme p-7">
           <Outlet />
         </main>
       </div>

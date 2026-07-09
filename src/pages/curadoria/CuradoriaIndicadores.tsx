@@ -18,6 +18,14 @@ type Business = {
 
 type Perfil = { id: string; nome: string | null; email: string | null; curadoria_status: CuradoriaStatus }
 
+type Fair = {
+  id: string
+  nome: string
+  taxa: number
+  max_participantes: number | null
+  parks: { nome: string } | null
+}
+
 const CURADORIA_LABELS: Record<CuradoriaStatus, { label: string; cor: string }> = {
   pendente: { label: 'Pendente', cor: 'bg-amber-100 text-amber-800' },
   aprovado: { label: 'Aprovado', cor: 'bg-green-100 text-green-800' },
@@ -28,15 +36,30 @@ const card = 'rounded-card border border-marca-ink/[.07] bg-white p-5 shadow-car
 const select =
   'rounded-xl border border-marca-ink/15 px-3 py-2 text-sm outline-none transition focus:border-marca-acao focus:ring-4 focus:ring-marca-acao/10'
 const badge = 'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold'
+const tabBtn = 'rounded-xl px-4 py-2 text-sm font-semibold transition'
+const tabAtiva = 'bg-marca-acao text-white shadow-glow'
+const tabInativa = 'text-marca-ink/60 hover:bg-marca-ink/5'
 
 function formatarData(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR')
 }
 
+function formatarMoeda(v: number): string {
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
 export default function CuradoriaIndicadores() {
+  const [aba, setAba] = useState<'comerciantes' | 'feiras'>('comerciantes')
+
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [perfis, setPerfis] = useState<Record<string, Perfil>>({})
   const [participacoes, setParticipacoes] = useState<Record<string, { total: number; confirmadas: number }>>({})
+
+  const [fairs, setFairs] = useState<Fair[]>([])
+  const [desempenhoFeiras, setDesempenhoFeiras] = useState<
+    Record<string, { total: number; confirmadas: number; arrecadado: number }>
+  >({})
+
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
 
@@ -48,18 +71,23 @@ export default function CuradoriaIndicadores() {
   const carregar = useCallback(async () => {
     setLoading(true)
     setErro(null)
-    const { data: negocios, error: negociosErro } = await supabase
-      .from('businesses')
-      .select('id,user_id,nome,segmento,faixa_faturamento,ativo,criado_em')
-      .order('criado_em', { ascending: false })
-    if (negociosErro) {
-      console.error('CuradoriaIndicadores: falha ao carregar negócios', negociosErro)
-      setErro('Falha ao carregar comerciantes: ' + negociosErro.message)
+    const [negociosRes, feirasRes] = await Promise.all([
+      supabase
+        .from('businesses')
+        .select('id,user_id,nome,segmento,faixa_faturamento,ativo,criado_em')
+        .order('criado_em', { ascending: false }),
+      supabase.from('fairs').select('id,nome,taxa,max_participantes,parks(nome)').order('nome'),
+    ])
+    if (negociosRes.error || feirasRes.error) {
+      const e = negociosRes.error ?? feirasRes.error!
+      console.error('CuradoriaIndicadores: falha ao carregar negócios/feiras', e)
+      setErro('Falha ao carregar comerciantes: ' + e.message)
       setLoading(false)
       return
     }
-    const lista = (negocios ?? []) as Business[]
+    const lista = (negociosRes.data ?? []) as Business[]
     setBusinesses(lista)
+    setFairs((feirasRes.data ?? []) as unknown as Fair[])
 
     const userIds = [...new Set(lista.map((b) => b.user_id))]
     const businessIds = lista.map((b) => b.id)
@@ -69,7 +97,7 @@ export default function CuradoriaIndicadores() {
         ? supabase.from('profiles').select('id,nome,email,curadoria_status').in('id', userIds)
         : Promise.resolve({ data: [], error: null }),
       businessIds.length
-        ? supabase.from('applications').select('business_id,status').in('business_id', businessIds)
+        ? supabase.from('applications').select('id,business_id,fair_id,status').in('business_id', businessIds)
         : Promise.resolve({ data: [], error: null }),
     ])
     if (perfisRes.error || appsRes.error) {
@@ -84,14 +112,46 @@ export default function CuradoriaIndicadores() {
     for (const p of (perfisRes.data ?? []) as Perfil[]) mapaPerfis[p.id] = p
     setPerfis(mapaPerfis)
 
+    const aplicacoes = (appsRes.data ?? []) as { id: string; business_id: string; fair_id: string; status: string }[]
+
     const mapaParticipacoes: Record<string, { total: number; confirmadas: number }> = {}
-    for (const a of (appsRes.data ?? []) as { business_id: string; status: string }[]) {
+    const mapaFeiras: Record<string, { total: number; confirmadas: number; arrecadado: number }> = {}
+    for (const a of aplicacoes) {
       const atual = mapaParticipacoes[a.business_id] ?? { total: 0, confirmadas: 0 }
       atual.total += 1
-      if (a.status === 'confirmado' || a.status === 'realizada') atual.confirmadas += 1
+      const confirmada = a.status === 'confirmado' || a.status === 'realizada'
+      if (confirmada) atual.confirmadas += 1
       mapaParticipacoes[a.business_id] = atual
+
+      const atualFeira = mapaFeiras[a.fair_id] ?? { total: 0, confirmadas: 0, arrecadado: 0 }
+      atualFeira.total += 1
+      if (confirmada) atualFeira.confirmadas += 1
+      mapaFeiras[a.fair_id] = atualFeira
     }
     setParticipacoes(mapaParticipacoes)
+
+    const appIds = aplicacoes.map((a) => a.id)
+    if (appIds.length) {
+      const { data: pagamentos, error: pagamentosErro } = await supabase
+        .from('payments')
+        .select('application_id,valor')
+        .eq('status', 'confirmado')
+        .in('application_id', appIds)
+      if (pagamentosErro) {
+        console.error('CuradoriaIndicadores: falha ao carregar pagamentos por feira', pagamentosErro)
+      } else {
+        const appParaFeira: Record<string, string> = {}
+        for (const a of aplicacoes) appParaFeira[a.id] = a.fair_id
+        for (const p of (pagamentos ?? []) as { application_id: string; valor: number }[]) {
+          const fairId = appParaFeira[p.application_id]
+          if (!fairId) continue
+          const atualFeira = mapaFeiras[fairId] ?? { total: 0, confirmadas: 0, arrecadado: 0 }
+          atualFeira.arrecadado += Number(p.valor)
+          mapaFeiras[fairId] = atualFeira
+        }
+      }
+    }
+    setDesempenhoFeiras(mapaFeiras)
 
     setLoading(false)
   }, [])
@@ -125,6 +185,12 @@ export default function CuradoriaIndicadores() {
     return { total: businesses.length, aprovados, ativos, confirmadas }
   }, [businesses, perfis, participacoes])
 
+  const linhasFeiras = useMemo(() => {
+    return fairs
+      .map((f) => ({ fair: f, desempenho: desempenhoFeiras[f.id] ?? { total: 0, confirmadas: 0, arrecadado: 0 } }))
+      .sort((a, b) => b.desempenho.arrecadado - a.desempenho.arrecadado)
+  }, [fairs, desempenhoFeiras])
+
   if (loading) return <p className="text-sm text-marca-ink/60">Carregando…</p>
 
   return (
@@ -140,6 +206,63 @@ export default function CuradoriaIndicadores() {
         <KpiCard label="Participações confirmadas" valor={kpis.confirmadas} icon={CalendarCheck} tone="amarelo" />
       </div>
 
+      <div className="flex gap-2 border-b border-marca-ink/10 pb-2">
+        <button
+          type="button"
+          className={`${tabBtn} ${aba === 'comerciantes' ? tabAtiva : tabInativa}`}
+          onClick={() => setAba('comerciantes')}
+        >
+          Comerciantes
+        </button>
+        <button
+          type="button"
+          className={`${tabBtn} ${aba === 'feiras' ? tabAtiva : tabInativa}`}
+          onClick={() => setAba('feiras')}
+        >
+          Desempenho das feiras
+        </button>
+      </div>
+
+      {aba === 'feiras' ? (
+        <div className={`${card} overflow-x-auto p-0`}>
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead>
+              <tr className="border-b border-marca-ink/10 text-marca-ink/50">
+                <th className="px-5 py-3 font-medium">Feira</th>
+                <th className="px-5 py-3 font-medium">Parque</th>
+                <th className="px-5 py-3 font-medium">Taxa</th>
+                <th className="px-5 py-3 font-medium">Inscrições</th>
+                <th className="px-5 py-3 font-medium">Ocupação</th>
+                <th className="px-5 py-3 font-medium">Arrecadação</th>
+              </tr>
+            </thead>
+            <tbody>
+              {linhasFeiras.map(({ fair: f, desempenho: d }) => {
+                const ocupacao = f.max_participantes ? Math.round((d.confirmadas / f.max_participantes) * 100) : null
+                return (
+                  <tr key={f.id} className="border-b border-marca-ink/[.05] last:border-0">
+                    <td className="px-5 py-3 font-medium text-marca-ink">{f.nome}</td>
+                    <td className="px-5 py-3 text-marca-ink/80">{f.parks?.nome ?? '—'}</td>
+                    <td className="px-5 py-3 text-marca-ink/80">{formatarMoeda(f.taxa)}</td>
+                    <td className="px-5 py-3 text-marca-ink/80">
+                      {d.total} <span className="text-marca-ink/40">({d.confirmadas} confirmadas)</span>
+                    </td>
+                    <td className="px-5 py-3 text-marca-ink/80">
+                      {ocupacao === null ? '—' : `${ocupacao}% (${d.confirmadas}/${f.max_participantes})`}
+                    </td>
+                    <td className="px-5 py-3 font-semibold text-marca-ink">{formatarMoeda(d.arrecadado)}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+
+          {linhasFeiras.length === 0 && (
+            <p className="py-8 text-center text-sm text-marca-ink/60">Nenhuma feira cadastrada.</p>
+          )}
+        </div>
+      ) : (
+        <>
       <div className={`${card} flex flex-wrap gap-3`}>
         <input
           type="text"
@@ -218,6 +341,8 @@ export default function CuradoriaIndicadores() {
           <p className="py-8 text-center text-sm text-marca-ink/60">Nenhum comerciante encontrado com esses filtros.</p>
         )}
       </div>
+        </>
+      )}
     </div>
   )
 }

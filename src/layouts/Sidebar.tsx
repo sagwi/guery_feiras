@@ -65,6 +65,7 @@ export default function Sidebar({
           <NavLink
             key={to}
             to={to}
+            end
             className={({ isActive }) => `${linkBase} ${isActive ? linkAtivo : linkInativo}`}
           >
             <Icon className="h-5 w-5 shrink-0" strokeWidth={1.9} />

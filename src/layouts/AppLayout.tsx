@@ -18,7 +18,7 @@ export default function AppLayout() {
 
       <div className="flex flex-1 flex-col">
         <Topbar collapsed={collapsed} onToggleCollapsed={() => setCollapsed((v) => !v)} />
-        <main className="flex-1 bg-marca-roxo/5 p-6">
+        <main className="flex-1 bg-marca-creme p-7">
           <Outlet />
         </main>
       </div>

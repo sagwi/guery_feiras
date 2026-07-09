@@ -13,12 +13,16 @@ type Inscricao = {
 
 type Perfil = { id: string; nome: string | null; email: string | null }
 
-const card = 'rounded-lg border border-marca-roxo/10 bg-white p-4 space-y-3'
-const badge = 'shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold'
-const botaoAprovar = 'rounded-lg bg-marca-roxo px-4 py-2 text-sm font-semibold text-white hover:bg-marca-roxoClaro transition disabled:opacity-50'
-const botaoReprovar = 'rounded-lg border border-red-600 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 transition disabled:opacity-50'
-const textarea = 'w-full rounded-lg border border-marca-roxo/20 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-marca-amarelo'
-const erroClasse = 'text-sm text-red-600'
+const card =
+  'animate-fadeUp space-y-3 rounded-card border border-marca-ink/[.07] bg-white p-5 shadow-card'
+const badge = 'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold'
+const botaoAprovar =
+  'rounded-xl bg-marca-acao px-4 py-2 text-sm font-bold text-white shadow-glow transition hover:-translate-y-0.5 hover:bg-marca-acaoHover disabled:opacity-50'
+const botaoReprovar =
+  'rounded-xl border border-marca-coral/50 px-4 py-2 text-sm font-semibold text-marca-coral transition hover:bg-marca-coral/5 disabled:opacity-50'
+const textarea =
+  'w-full rounded-xl border border-marca-ink/15 px-3.5 py-2.5 outline-none transition focus:border-marca-acao focus:ring-4 focus:ring-marca-acao/10'
+const erroClasse = 'text-sm text-marca-coral'
 
 function formatarDataBR(iso: string): string {
   const [y, m, d] = iso.split('-')
@@ -160,16 +164,16 @@ export default function CuradoriaInscricoes() {
     setProcessandoId(null)
   }
 
-  if (loading) return <p className="text-sm text-marca-roxo/60">Carregando…</p>
+  if (loading) return <p className="text-sm text-marca-ink/60">Carregando…</p>
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-marca-roxo">Inscrições pendentes</h2>
+      <h2 className="font-display text-xl font-bold text-marca-ink">Inscrições pendentes</h2>
 
       {erro && <p className={erroClasse}>{erro}</p>}
 
       {inscricoes.length === 0 && (
-        <p className="py-6 text-center text-sm text-marca-roxo/60">Nenhuma inscrição pendente.</p>
+        <p className="py-6 text-center text-sm text-marca-ink/60">Nenhuma inscrição pendente.</p>
       )}
 
       <div className="space-y-3">
@@ -179,15 +183,15 @@ export default function CuradoriaInscricoes() {
           return (
             <div key={i.id} className={card}>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold text-marca-roxo">{i.fairs?.nome ?? '—'}</p>
+                <p className="font-display font-semibold text-marca-ink">{i.fairs?.nome ?? '—'}</p>
                 <span className={`${badge} ${statusInfo.cor}`}>{statusInfo.label}</span>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-sm text-marca-roxo md:grid-cols-4">
-                <div><span className="text-marca-roxo/60">Parque:</span> {i.fairs?.parks?.nome ?? '—'}</div>
-                <div><span className="text-marca-roxo/60">Negócio:</span> {i.businesses?.nome ?? '—'}</div>
-                <div><span className="text-marca-roxo/60">Inscrito:</span> {perfil?.nome ?? perfil?.email ?? i.user_id}</div>
-                <div><span className="text-marca-roxo/60">Data:</span> {formatarDataBR(i.data_escolhida)}</div>
-                {i.fairs && <div><span className="text-marca-roxo/60">Taxa:</span> {formatarMoeda(i.fairs.taxa)}</div>}
+              <div className="grid grid-cols-2 gap-2 text-sm text-marca-ink md:grid-cols-4">
+                <div><span className="text-marca-ink/50">Parque:</span> {i.fairs?.parks?.nome ?? '—'}</div>
+                <div><span className="text-marca-ink/50">Negócio:</span> {i.businesses?.nome ?? '—'}</div>
+                <div><span className="text-marca-ink/50">Inscrito:</span> {perfil?.nome ?? perfil?.email ?? i.user_id}</div>
+                <div><span className="text-marca-ink/50">Data:</span> {formatarDataBR(i.data_escolhida)}</div>
+                {i.fairs && <div><span className="text-marca-ink/50">Taxa:</span> {formatarMoeda(i.fairs.taxa)}</div>}
               </div>
 
               {reprovandoId === i.id ? (
@@ -210,7 +214,7 @@ export default function CuradoriaInscricoes() {
                     </button>
                     <button
                       type="button"
-                      className="text-sm text-marca-roxo/70 hover:text-marca-roxo"
+                      className="text-sm font-semibold text-marca-ink/60 hover:text-marca-ink"
                       onClick={() => { setReprovandoId(null); setMotivo('') }}
                     >
                       Cancelar
@@ -242,11 +246,11 @@ export default function CuradoriaInscricoes() {
         })}
       </div>
 
-      <h2 className="pt-4 text-lg font-bold text-marca-roxo">Datas ativas</h2>
-      <p className="text-sm text-marca-roxo/70">Cancelar uma data já paga gera crédito automático na carteira do comerciante.</p>
+      <h2 className="pt-4 font-display text-xl font-bold text-marca-ink">Datas ativas</h2>
+      <p className="text-sm text-marca-ink/60">Cancelar uma data já paga gera crédito automático na carteira do comerciante.</p>
 
       {ativas.length === 0 && (
-        <p className="py-6 text-center text-sm text-marca-roxo/60">Nenhuma data ativa.</p>
+        <p className="py-6 text-center text-sm text-marca-ink/60">Nenhuma data ativa.</p>
       )}
 
       <div className="space-y-3">
@@ -256,14 +260,14 @@ export default function CuradoriaInscricoes() {
           return (
             <div key={i.id} className={card}>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold text-marca-roxo">{i.fairs?.nome ?? '—'}</p>
+                <p className="font-display font-semibold text-marca-ink">{i.fairs?.nome ?? '—'}</p>
                 <span className={`${badge} ${statusInfo.cor}`}>{statusInfo.label}</span>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-sm text-marca-roxo md:grid-cols-4">
-                <div><span className="text-marca-roxo/60">Parque:</span> {i.fairs?.parks?.nome ?? '—'}</div>
-                <div><span className="text-marca-roxo/60">Inscrito:</span> {perfil?.nome ?? perfil?.email ?? i.user_id}</div>
-                <div><span className="text-marca-roxo/60">Data:</span> {formatarDataBR(i.data_escolhida)}</div>
-                {i.fairs && <div><span className="text-marca-roxo/60">Taxa:</span> {formatarMoeda(i.fairs.taxa)}</div>}
+              <div className="grid grid-cols-2 gap-2 text-sm text-marca-ink md:grid-cols-4">
+                <div><span className="text-marca-ink/50">Parque:</span> {i.fairs?.parks?.nome ?? '—'}</div>
+                <div><span className="text-marca-ink/50">Inscrito:</span> {perfil?.nome ?? perfil?.email ?? i.user_id}</div>
+                <div><span className="text-marca-ink/50">Data:</span> {formatarDataBR(i.data_escolhida)}</div>
+                {i.fairs && <div><span className="text-marca-ink/50">Taxa:</span> {formatarMoeda(i.fairs.taxa)}</div>}
               </div>
               <button
                 type="button"

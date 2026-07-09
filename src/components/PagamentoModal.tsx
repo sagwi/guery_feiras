@@ -15,8 +15,10 @@ export type AplicacaoPagavel = {
 type Metodo = 'gateway' | 'credito'
 
 const metodoBtn = (ativo: boolean) =>
-  `flex-1 rounded-lg border py-2 text-sm font-semibold transition ${
-    ativo ? 'border-marca-roxo bg-marca-roxo/5 text-marca-roxo' : 'border-marca-roxo/20 text-marca-roxo/60'
+  `flex-1 rounded-xl border py-2.5 text-sm font-semibold transition ${
+    ativo
+      ? 'border-marca-acao bg-marca-acao/5 text-marca-acao'
+      : 'border-marca-ink/15 text-marca-ink/60 hover:border-marca-ink/30'
   }`
 
 function formatarMoeda(v: number): string {
@@ -88,52 +90,56 @@ export default function PagamentoModal({
   return (
     <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/40" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg">
-          <div className="mb-4 flex items-center justify-between">
-            <Dialog.Title className="text-lg font-bold text-marca-roxo">
-              Pagar {application.fairs?.nome ?? ''}
-            </Dialog.Title>
-            <Dialog.Close className="text-marca-roxo/60 hover:text-marca-roxo">
-              <X className="h-5 w-5" />
-            </Dialog.Close>
-          </div>
-
-          <p className="mb-4 text-center text-2xl font-bold text-marca-roxo">{formatarMoeda(taxa)}</p>
-
-          <div className="mb-4 flex gap-2">
-            <button type="button" className={metodoBtn(metodo === 'gateway')} onClick={() => setMetodo('gateway')}>
-              Cartão
-            </button>
-            {temCreditoSuficiente && (
-              <button type="button" className={metodoBtn(metodo === 'credito')} onClick={() => setMetodo('credito')}>
-                Crédito
-              </button>
-            )}
-          </div>
-
-          {metodo === 'gateway' && (
-            <p className="mb-4 text-center text-xs text-marca-roxo/50">
-              Você será redirecionado pro checkout seguro da Stripe.
-            </p>
-          )}
-
-          {metodo === 'credito' && (
-            <div className="mb-4 rounded-lg border border-marca-roxo/20 bg-marca-roxo/5 p-3 text-sm text-marca-roxo/80">
-              Usar meu crédito disponível ({formatarMoeda(saldoDisponivel)}). O valor será abatido da sua carteira, sem cobrança no cartão.
+        <Dialog.Overlay className="fixed inset-0 bg-marca-roxoDeep/50 backdrop-blur-sm" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-card bg-white shadow-lift">
+          <div className="relative bg-gradient-to-br from-marca-roxoDark via-marca-acao to-marca-acaoHover px-6 pb-5 pt-5 text-white">
+            <div className="pointer-events-none absolute inset-0 [background:radial-gradient(circle_at_90%_10%,rgba(245,180,0,.35),transparent_50%)]" />
+            <div className="relative flex items-start justify-between">
+              <Dialog.Title className="font-display text-base font-semibold">
+                Pagar {application.fairs?.nome ?? ''}
+              </Dialog.Title>
+              <Dialog.Close className="text-white/70 hover:text-white">
+                <X className="h-5 w-5" />
+              </Dialog.Close>
             </div>
-          )}
+            <p className="relative mt-3 font-display text-3xl font-bold">{formatarMoeda(taxa)}</p>
+          </div>
 
-          {erro && <p className="mb-3 text-sm text-red-600">{erro}</p>}
+          <div className="p-6">
+            <div className="mb-4 flex gap-2">
+              <button type="button" className={metodoBtn(metodo === 'gateway')} onClick={() => setMetodo('gateway')}>
+                Cartão / PIX
+              </button>
+              {temCreditoSuficiente && (
+                <button type="button" className={metodoBtn(metodo === 'credito')} onClick={() => setMetodo('credito')}>
+                  Crédito
+                </button>
+              )}
+            </div>
 
-          <button
-            type="button"
-            disabled={processando}
-            onClick={metodo === 'gateway' ? pagarComGateway : pagarComCredito}
-            className="w-full rounded-lg bg-marca-amarelo px-4 py-2 text-sm font-semibold text-marca-roxo hover:brightness-95 transition disabled:opacity-50"
-          >
-            {processando ? 'Processando...' : metodo === 'gateway' ? 'Ir para pagamento' : 'Pagar com crédito'}
-          </button>
+            {metodo === 'gateway' && (
+              <p className="mb-4 text-center text-xs text-marca-ink/50">
+                Você será redirecionado pro checkout seguro da Stripe.
+              </p>
+            )}
+
+            {metodo === 'credito' && (
+              <div className="mb-4 rounded-xl border border-marca-acao/15 bg-marca-acao/5 p-3 text-sm text-marca-ink/80">
+                Usar meu crédito disponível ({formatarMoeda(saldoDisponivel)}). O valor será abatido da sua carteira, sem cobrança no cartão.
+              </div>
+            )}
+
+            {erro && <p className="mb-3 text-sm text-marca-coral">{erro}</p>}
+
+            <button
+              type="button"
+              disabled={processando}
+              onClick={metodo === 'gateway' ? pagarComGateway : pagarComCredito}
+              className="w-full rounded-xl bg-marca-amarelo px-4 py-3 text-sm font-bold text-marca-ink shadow-amber transition hover:-translate-y-0.5 hover:brightness-[1.04] disabled:opacity-50"
+            >
+              {processando ? 'Processando...' : metodo === 'gateway' ? 'Ir para pagamento' : 'Pagar com crédito'}
+            </button>
+          </div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

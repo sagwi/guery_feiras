@@ -3,9 +3,10 @@ import type { FormEvent } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-const input = 'w-full rounded-lg border border-marca-roxo/20 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-marca-amarelo'
-const label = 'block text-sm font-medium text-marca-roxo mb-1'
-const erroClasse = 'text-sm text-red-600 mt-1'
+const input =
+  'w-full rounded-xl border border-marca-ink/15 px-3.5 py-2.5 outline-none transition focus:border-marca-acao focus:ring-4 focus:ring-marca-acao/10'
+const label = 'mb-1.5 block text-sm font-semibold text-marca-ink'
+const erroClasse = 'mt-1 text-sm text-marca-coral'
 
 export default function ChangePassword() {
   const [senha, setSenha] = useState('')
@@ -31,9 +32,13 @@ export default function ChangePassword() {
   }
 
   return (
-    <div className="mx-auto max-w-sm">
-      <h1 className="text-xl font-bold text-marca-roxo mb-4">Alterar senha</h1>
-      <form className="space-y-4" onSubmit={handleSubmit}>
+    <div className="mx-auto max-w-md">
+      <h1 className="mb-1 font-display text-2xl font-bold text-marca-ink">Alterar senha</h1>
+      <p className="mb-6 text-sm text-marca-ink/60">Defina uma nova senha para sua conta.</p>
+      <form
+        className="animate-fadeUp space-y-4 rounded-card border border-marca-ink/[.07] bg-white p-6 shadow-card"
+        onSubmit={handleSubmit}
+      >
         <div>
           <label className={label}>Nova senha</label>
           <div className="relative">
@@ -47,7 +52,7 @@ export default function ChangePassword() {
             <button
               type="button"
               onClick={() => setMostrar((v) => !v)}
-              className="absolute inset-y-0 right-0 flex items-center px-3 text-marca-roxo/60 hover:text-marca-roxo"
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-marca-ink/50 hover:text-marca-ink"
               aria-label={mostrar ? 'Ocultar senha' : 'Mostrar senha'}
             >
               {mostrar ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -67,12 +72,12 @@ export default function ChangePassword() {
         </div>
 
         {erro && <p className={erroClasse}>{erro}</p>}
-        {ok && <p className="text-sm text-green-700">Senha alterada com sucesso.</p>}
+        {ok && <p className="text-sm font-semibold text-[#0B7A54]">Senha alterada com sucesso.</p>}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-marca-roxo text-white py-2 font-semibold hover:bg-marca-roxoClaro transition disabled:opacity-50"
+          className="w-full rounded-xl bg-marca-acao py-3 font-bold text-white shadow-glow transition hover:-translate-y-0.5 hover:bg-marca-acaoHover disabled:opacity-50"
         >
           {loading ? 'Salvando...' : 'Salvar nova senha'}
         </button>

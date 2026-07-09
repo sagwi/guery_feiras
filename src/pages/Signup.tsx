@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MailCheck } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import StepPessoais from './signup/StepPessoais'
 import type { PessoaisData } from './signup/StepPessoais'
@@ -50,9 +51,14 @@ export default function Signup() {
 
   if (enviado) {
     return (
-      <div className="text-center space-y-3">
-        <h2 className="text-lg font-semibold text-marca-roxo">Confirme seu e-mail para ativar a conta</h2>
-        <p className="text-sm text-marca-roxo/80">
+      <div className="space-y-3 text-center">
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-marca-amarelo to-marca-coral text-marca-ink">
+          <MailCheck className="h-7 w-7" />
+        </span>
+        <h2 className="font-display text-xl font-semibold text-marca-ink">
+          Confirme seu e-mail para ativar a conta
+        </h2>
+        <p className="text-sm text-marca-ink/70">
           Enviamos um link de confirmação para {pessoais?.email}. Abra seu e-mail e clique no link para continuar.
         </p>
       </div>
@@ -62,13 +68,14 @@ export default function Signup() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="h-2 rounded-full bg-marca-roxo/10 overflow-hidden">
+        <h2 className="font-display text-[26px] font-semibold text-marca-ink">Criar conta</h2>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-marca-ink/10">
           <div
-            className="h-full bg-marca-amarelo transition-all"
+            className="h-full rounded-full bg-gradient-to-r from-marca-acao to-marca-acaoHover transition-all duration-500"
             style={{ width: `${((step + 1) / TITULOS.length) * 100}%` }}
           />
         </div>
-        <p className="mt-2 text-sm text-marca-roxo/70">
+        <p className="mt-2 text-sm font-medium text-marca-ink/60">
           Passo {step + 1} de {TITULOS.length} — {TITULOS[step]}
         </p>
       </div>

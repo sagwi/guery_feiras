@@ -61,11 +61,11 @@ export default function NotificacoesDropdown() {
         <button
           type="button"
           aria-label="Notificações"
-          className="relative rounded-lg p-2 text-marca-roxo/70 hover:bg-marca-roxo/5 hover:text-marca-roxo"
+          className="relative rounded-xl p-2 text-marca-ink/60 transition-colors hover:bg-marca-ink/5 hover:text-marca-ink"
         >
-          <Bell className="h-5 w-5" />
+          <Bell className="h-5 w-5" strokeWidth={1.9} />
           {naoLidas > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-marca-amarelo text-[10px] font-bold text-marca-roxo">
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 animate-pulseBadge items-center justify-center rounded-full bg-marca-amarelo text-[10px] font-bold text-marca-ink">
               {naoLidas > 9 ? '9+' : naoLidas}
             </span>
           )}
@@ -76,15 +76,15 @@ export default function NotificacoesDropdown() {
         <DropdownMenu.Content
           align="end"
           sideOffset={8}
-          className="z-50 w-80 rounded-lg border border-marca-roxo/10 bg-white shadow-xl"
+          className="z-50 w-80 overflow-hidden rounded-card border border-marca-ink/[.07] bg-white shadow-lift"
         >
-          <div className="flex items-center justify-between border-b border-marca-roxo/10 px-4 py-3">
-            <span className="font-semibold text-marca-roxo">Notificações</span>
+          <div className="flex items-center justify-between border-b border-marca-ink/10 px-4 py-3">
+            <span className="font-display font-semibold text-marca-ink">Notificações</span>
             {naoLidas > 0 && (
               <button
                 type="button"
                 onClick={marcarTodas}
-                className="text-xs font-medium text-marca-roxo/70 hover:text-marca-roxo hover:underline"
+                className="text-xs font-semibold text-marca-acao hover:text-marca-acaoHover hover:underline"
               >
                 Marcar todas
               </button>
@@ -93,16 +93,21 @@ export default function NotificacoesDropdown() {
 
           <div className="max-h-80 overflow-y-auto">
             {notificacoes.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-marca-roxo/60">Nenhuma notificação.</p>
+              <p className="px-4 py-6 text-center text-sm text-marca-ink/60">Nenhuma notificação.</p>
             ) : (
               notificacoes.map((n) => (
                 <div
                   key={n.id}
-                  className={`border-b border-marca-roxo/5 px-4 py-3 last:border-0 ${n.lida ? '' : 'bg-marca-amarelo/10'}`}
+                  className={`border-b border-marca-ink/5 px-4 py-3 last:border-0 ${n.lida ? '' : 'bg-marca-amarelo/10'}`}
                 >
-                  <p className="text-sm font-semibold text-marca-roxo">{n.titulo}</p>
-                  {n.corpo && <p className="mt-0.5 text-xs text-marca-roxo/70">{n.corpo}</p>}
-                  <p className="mt-1 text-[11px] text-marca-roxo/50">{tempoRelativo(n.criado_em)}</p>
+                  <div className="flex items-start gap-2">
+                    {!n.lida && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-marca-amarelo" />}
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-marca-ink">{n.titulo}</p>
+                      {n.corpo && <p className="mt-0.5 text-xs text-marca-ink/70">{n.corpo}</p>}
+                      <p className="mt-1 text-[11px] text-marca-ink/50">{tempoRelativo(n.criado_em)}</p>
+                    </div>
+                  </div>
                 </div>
               ))
             )}

@@ -5,12 +5,13 @@ import * as Checkbox from '@radix-ui/react-checkbox'
 import { Check, Eye, EyeOff } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-const input = 'w-full rounded-lg border border-marca-roxo/20 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-marca-amarelo'
-const label = 'block text-sm font-medium text-marca-roxo mb-1'
-const erroClasse = 'text-sm text-red-600 mt-1'
+const input =
+  'w-full rounded-xl border border-marca-ink/15 px-3.5 py-3 outline-none transition focus:border-marca-acao focus:ring-4 focus:ring-marca-acao/10'
+const label = 'mb-1.5 block text-sm font-semibold text-marca-ink'
+const erroClasse = 'mt-1 text-sm text-marca-coral'
 const check =
-  'mt-0.5 h-5 w-5 shrink-0 rounded border border-marca-roxo/40 flex items-center justify-center data-[state=checked]:bg-marca-roxo'
-const link = 'text-marca-roxo underline underline-offset-2'
+  'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border border-marca-ink/30 data-[state=checked]:border-marca-acao data-[state=checked]:bg-marca-acao'
+const linkCls = 'font-semibold text-marca-acao hover:text-marca-acaoHover'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -30,7 +31,10 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
 
     if (error) {
-      if (error.code === 'email_not_confirmed' || error.message.toLowerCase().includes('email not confirmed')) {
+      if (
+        error.code === 'email_not_confirmed' ||
+        error.message.toLowerCase().includes('email not confirmed')
+      ) {
         setErro('Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.')
       } else {
         setErro('E-mail ou senha inválidos.')
@@ -44,6 +48,13 @@ export default function Login() {
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
+      <div>
+        <h2 className="font-display text-[26px] font-semibold text-marca-ink">Entrar</h2>
+        <p className="mt-1 text-sm text-marca-ink/60">
+          Bem-vindo de volta ao painel do comerciante.
+        </p>
+      </div>
+
       <div>
         <label className={label}>E-mail</label>
         <input
@@ -68,7 +79,7 @@ export default function Login() {
           <button
             type="button"
             onClick={() => setMostrarSenha((v) => !v)}
-            className="absolute inset-y-0 right-0 flex items-center px-3 text-marca-roxo/60 hover:text-marca-roxo"
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-marca-ink/50 hover:text-marca-ink"
             aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
           >
             {mostrarSenha ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -88,11 +99,11 @@ export default function Login() {
               <Check className="h-4 w-4 text-white" />
             </Checkbox.Indicator>
           </Checkbox.Root>
-          <label htmlFor="lembrar" className="text-sm text-marca-roxo">
+          <label htmlFor="lembrar" className="text-sm text-marca-ink">
             Lembrar de mim
           </label>
         </div>
-        <Link to="/recuperar-senha" className={`text-sm ${link}`}>
+        <Link to="/recuperar-senha" className={`text-sm ${linkCls}`}>
           Esqueceu a senha?
         </Link>
       </div>
@@ -102,14 +113,14 @@ export default function Login() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-lg bg-marca-roxo text-white py-2 font-semibold hover:bg-marca-roxoClaro transition disabled:opacity-50"
+        className="w-full rounded-xl bg-marca-acao py-3 font-bold text-white shadow-glow transition hover:-translate-y-0.5 hover:bg-marca-acaoHover disabled:opacity-50"
       >
         {loading ? 'Entrando...' : 'Entrar'}
       </button>
 
-      <p className="text-center text-sm text-marca-roxo/80">
+      <p className="text-center text-sm text-marca-ink/70">
         Não tem conta?{' '}
-        <Link to="/signup" className={link}>
+        <Link to="/signup" className={linkCls}>
           Criar conta
         </Link>
       </p>

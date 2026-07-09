@@ -54,9 +54,10 @@ function withMask(field: UseFormRegisterReturn, mask: (v: string) => string) {
   }
 }
 
-const input = 'w-full rounded-lg border border-marca-roxo/20 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-marca-amarelo'
-const label = 'block text-sm font-medium text-marca-roxo mb-1'
-const erro = 'text-sm text-red-600 mt-1'
+const input =
+  'w-full rounded-xl border border-marca-ink/15 px-3.5 py-2.5 outline-none transition focus:border-marca-acao focus:ring-4 focus:ring-marca-acao/10'
+const label = 'mb-1.5 block text-sm font-semibold text-marca-ink'
+const erro = 'mt-1 text-sm text-marca-coral'
 
 export default function StepPessoais({
   defaultValues,
@@ -105,7 +106,7 @@ export default function StepPessoais({
       </div>
       <button
         type="submit"
-        className="w-full rounded-lg bg-marca-roxo text-white py-2 font-semibold hover:bg-marca-roxoClaro transition"
+        className="w-full rounded-xl bg-marca-acao py-3 font-bold text-white shadow-glow transition hover:-translate-y-0.5 hover:bg-marca-acaoHover"
       >
         Próximo
       </button>

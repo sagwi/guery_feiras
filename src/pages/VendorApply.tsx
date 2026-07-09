@@ -45,16 +45,20 @@ function formatarMoeda(v: number): string {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-const cardBase =
-  'w-full rounded-lg border p-4 text-left transition space-y-2'
-const cardSelecionavel = 'border-marca-roxo/10 bg-white hover:border-marca-roxo/40'
-const cardSelecionado = 'border-marca-roxo bg-marca-roxo/5 ring-1 ring-marca-roxo'
-const inputBase = 'w-full rounded-lg border border-marca-roxo/20 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-marca-amarelo'
-const btnPrimario = 'rounded-lg bg-marca-roxo px-5 py-2 text-sm font-semibold text-white hover:bg-marca-roxoClaro transition disabled:opacity-40 disabled:cursor-not-allowed'
-const btnSecundario = 'flex items-center gap-1 rounded-lg border border-marca-roxo text-marca-roxo px-4 py-2 text-sm font-semibold hover:bg-marca-roxo/5 transition'
-const btnVoltar = 'rounded-lg px-5 py-2 text-sm font-semibold text-marca-roxo/70 hover:text-marca-roxo transition disabled:opacity-0'
+const cardBase = 'w-full space-y-2 rounded-card border p-4 text-left transition'
+const cardSelecionavel = 'border-marca-ink/[.08] bg-white hover:border-marca-acao/40 hover:shadow-card'
+const cardSelecionado = 'border-marca-acao bg-marca-acao/5 ring-1 ring-marca-acao'
+const inputBase =
+  'w-full rounded-xl border border-marca-ink/15 px-3.5 py-2.5 outline-none transition focus:border-marca-acao focus:ring-4 focus:ring-marca-acao/10'
+const btnPrimario =
+  'rounded-xl bg-marca-acao px-5 py-2.5 text-sm font-bold text-white shadow-glow transition hover:-translate-y-0.5 hover:bg-marca-acaoHover disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none'
+const btnSecundario =
+  'flex items-center gap-1.5 rounded-xl border border-marca-acao/25 px-4 py-2 text-sm font-semibold text-marca-acao transition hover:bg-marca-acao/5'
+const btnVoltar =
+  'rounded-xl px-5 py-2.5 text-sm font-semibold text-marca-ink/60 transition hover:text-marca-ink disabled:opacity-0'
 const checkboxRow = 'flex items-center gap-2'
-const checkboxRoot = 'h-5 w-5 rounded border border-marca-roxo/40 flex items-center justify-center data-[state=checked]:bg-marca-roxo shrink-0'
+const checkboxRoot =
+  'h-5 w-5 shrink-0 rounded-[6px] border border-marca-ink/30 flex items-center justify-center transition-colors data-[state=checked]:border-marca-acao data-[state=checked]:bg-marca-acao'
 
 export default function VendorApply() {
   const { user, profile } = useAuth()
@@ -187,12 +191,14 @@ export default function VendorApply() {
 
   if (enviado) {
     return (
-      <div className="mx-auto max-w-lg space-y-4 rounded-lg border border-marca-roxo/10 bg-white p-6 text-center shadow-sm">
-        <CheckCircle2 className="mx-auto h-10 w-10 text-green-600" />
-        <h1 className="text-lg font-bold text-marca-roxo">Inscrição enviada!</h1>
-        <p className="text-sm text-marca-roxo/70">Sua inscrição está pendente de análise.</p>
+      <div className="mx-auto max-w-lg animate-fadeUp space-y-4 rounded-card border border-marca-ink/[.07] bg-white p-8 text-center shadow-card">
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#D6F5E9] text-[#0B7A54]">
+          <CheckCircle2 className="h-8 w-8" />
+        </span>
+        <h1 className="font-display text-xl font-bold text-marca-ink">Inscrição enviada!</h1>
+        <p className="text-sm text-marca-ink/60">Sua inscrição está pendente de análise.</p>
         {selectedFair && (
-          <div className="space-y-1 rounded-lg bg-marca-roxo/5 p-4 text-left text-sm text-marca-roxo">
+          <div className="space-y-1 rounded-xl bg-marca-creme p-4 text-left text-sm text-marca-ink">
             <p><strong>Feira:</strong> {selectedFair.nome}</p>
             <p><strong>Parque:</strong> {selectedFair.parks?.nome ?? '—'}</p>
             <p><strong>Data:</strong> {formatarDataBR(selectedDate)}</p>
@@ -209,35 +215,39 @@ export default function VendorApply() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-marca-roxo">Nova Inscrição</h1>
-        <p className="text-sm text-marca-roxo/70">Inscreva sua marca em uma feira em 3 passos.</p>
+        <h1 className="font-display text-2xl font-bold text-marca-ink">Nova Inscrição</h1>
+        <p className="mt-0.5 text-sm text-marca-ink/60">Inscreva sua marca em uma feira em 3 passos.</p>
       </div>
 
       <div className="flex items-center gap-2">
         {PASSOS.map((p, i) => (
           <div key={p} className="flex items-center gap-2">
             <div
-              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                i <= step ? 'bg-marca-roxo text-white' : 'bg-marca-roxo/10 text-marca-roxo/50'
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                i < step
+                  ? 'bg-marca-acao text-white'
+                  : i === step
+                    ? 'bg-marca-acao text-white shadow-glow'
+                    : 'bg-marca-ink/10 text-marca-ink/50'
               }`}
             >
-              {i + 1}
+              {i < step ? <Check className="h-4 w-4" /> : i + 1}
             </div>
-            <span className={`text-sm ${i === step ? 'font-semibold text-marca-roxo' : 'text-marca-roxo/50'}`}>
+            <span className={`text-sm ${i === step ? 'font-semibold text-marca-ink' : 'text-marca-ink/50'}`}>
               {p}
             </span>
-            {i < PASSOS.length - 1 && <div className="h-px w-8 bg-marca-roxo/10" />}
+            {i < PASSOS.length - 1 && <div className="h-px w-8 bg-marca-ink/10" />}
           </div>
         ))}
       </div>
 
-      <div className="rounded-lg border border-marca-roxo/10 bg-white p-6 shadow-sm">
+      <div className="rounded-card border border-marca-ink/[.07] bg-white p-6 shadow-card">
         {step === 0 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-marca-roxo">Você deseja se inscrever com qual marca?</h2>
-            {loadingBusinesses && <p className="text-sm text-marca-roxo/60">Carregando...</p>}
+            <h2 className="font-display text-lg font-semibold text-marca-ink">Você deseja se inscrever com qual marca?</h2>
+            {loadingBusinesses && <p className="text-sm text-marca-ink/60">Carregando...</p>}
             {!loadingBusinesses && businesses.length === 0 && (
-              <p className="text-sm text-marca-roxo/70">
+              <p className="text-sm text-marca-ink/70">
                 Você ainda não tem nenhum negócio cadastrado. Cadastre um negócio para continuar.
               </p>
             )}
@@ -252,15 +262,15 @@ export default function VendorApply() {
                 >
                   <div className="flex items-center gap-3">
                     {b.imagem_url ? (
-                      <img src={b.imagem_url} alt={b.nome} className="h-10 w-10 rounded-md object-cover" />
+                      <img src={b.imagem_url} alt={b.nome} className="h-10 w-10 rounded-xl object-cover" />
                     ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-md bg-marca-roxo/5">
-                        <Store className="h-5 w-5 text-marca-roxo/30" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-marca-acao/10">
+                        <Store className="h-5 w-5 text-marca-acao/60" />
                       </div>
                     )}
                     <div>
-                      <p className="font-semibold text-marca-roxo">{b.nome}</p>
-                      <p className="text-sm text-marca-roxo/70">{b.segmento}</p>
+                      <p className="font-semibold text-marca-ink">{b.nome}</p>
+                      <p className="text-sm text-marca-ink/60">{b.segmento}</p>
                     </div>
                   </div>
                 </button>
@@ -274,10 +284,10 @@ export default function VendorApply() {
 
         {step === 1 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-marca-roxo">Escolha a feira e a data</h2>
-            {loadingFairs && <p className="text-sm text-marca-roxo/60">Carregando feiras...</p>}
+            <h2 className="font-display text-lg font-semibold text-marca-ink">Escolha a feira e a data</h2>
+            {loadingFairs && <p className="text-sm text-marca-ink/60">Carregando feiras...</p>}
             {!loadingFairs && fairsVisiveis.length === 0 && (
-              <p className="text-sm text-marca-roxo/70">Nenhuma feira disponível para inscrição no momento.</p>
+              <p className="text-sm text-marca-ink/70">Nenhuma feira disponível para inscrição no momento.</p>
             )}
             <div className="space-y-3">
               {fairsVisiveis.map((f) => (
@@ -291,20 +301,23 @@ export default function VendorApply() {
                     aria-pressed={selectedFairId === f.id}
                     className="w-full text-left"
                   >
-                    <p className="font-semibold text-marca-roxo">{f.nome}</p>
-                    <p className="text-sm text-marca-roxo/70">{f.parks?.nome ?? '—'}{f.local ? ` — ${f.local}` : ''}</p>
-                    <p className="text-sm text-marca-roxo/70">
-                      Taxa: {formatarMoeda(f.taxa)} · Vagas: {f.max_participantes ?? '—'}
+                    <p className="font-display font-semibold text-marca-ink">{f.nome}</p>
+                    <p className="text-sm text-marca-ink/60">{f.parks?.nome ?? '—'}{f.local ? ` — ${f.local}` : ''}</p>
+                    <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-marca-ink/70">
+                      <span className="rounded-full bg-marca-acao/10 px-2.5 py-0.5 text-xs font-semibold text-marca-acao">
+                        Taxa: {formatarMoeda(f.taxa)}
+                      </span>
+                      <span>Vagas: {f.max_participantes ?? '—'}</span>
                     </p>
                   </button>
 
                   {selectedFairId === f.id && (
-                    <div className="space-y-2 border-t border-marca-roxo/10 pt-3">
-                      <label htmlFor={`data-${f.id}`} className="block text-sm font-medium text-marca-roxo">
+                    <div className="space-y-2 border-t border-marca-ink/10 pt-3">
+                      <label htmlFor={`data-${f.id}`} className="block text-sm font-semibold text-marca-ink">
                         Data
                       </label>
                       {allowedDates.length === 0 ? (
-                        <p className="text-sm text-red-600">Nenhuma data disponível para esta feira.</p>
+                        <p className="text-sm text-marca-coral">Nenhuma data disponível para esta feira.</p>
                       ) : (
                         <>
                           <input
@@ -316,9 +329,9 @@ export default function VendorApply() {
                             value={selectedDate}
                             onChange={(e) => setSelectedDate(e.target.value)}
                           />
-                          <p className="text-xs text-marca-roxo/60">Dias: {diasLabel(f.dias_semana)}</p>
+                          <p className="text-xs text-marca-ink/60">Dias: {diasLabel(f.dias_semana)}</p>
                           {selectedDate !== '' && !dateValido && (
-                            <p className="text-sm text-red-600">
+                            <p className="text-sm text-marca-coral">
                               Data indisponível para esta feira. Escolha um dos dias permitidos.
                             </p>
                           )}
@@ -334,9 +347,9 @@ export default function VendorApply() {
 
         {step === 2 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-marca-roxo">Termos e envio</h2>
+            <h2 className="font-display text-lg font-semibold text-marca-ink">Termos e envio</h2>
             {selectedFair && (
-              <div className="space-y-1 rounded-lg border border-marca-roxo/10 bg-marca-roxo/5 p-4 text-sm text-marca-roxo">
+              <div className="space-y-1 rounded-xl border border-marca-ink/[.08] bg-marca-creme p-4 text-sm text-marca-ink">
                 <p><strong>Feira:</strong> {selectedFair.nome}</p>
                 <p><strong>Parque:</strong> {selectedFair.parks?.nome ?? '—'}</p>
                 <p><strong>Data:</strong> {formatarDataBR(selectedDate)}</p>
@@ -345,9 +358,9 @@ export default function VendorApply() {
             )}
             {profile?.curadoria_status !== 'aprovado' && (
               // ponytail: gate real (bloquear submit) fica p/ Fatia 3 — aqui só avisa
-              <div className="flex items-center gap-3 rounded-lg border border-marca-amarelo bg-marca-amarelo/10 px-4 py-3">
-                <Clock className="h-5 w-5 shrink-0 text-marca-roxo" />
-                <p className="text-sm text-marca-roxo">
+              <div className="flex items-center gap-3 rounded-xl border border-marca-amarelo/60 bg-marca-amarelo/10 px-4 py-3">
+                <Clock className="h-5 w-5 shrink-0 text-[#B47C00]" />
+                <p className="text-sm text-marca-ink">
                   Seu cadastro ainda está em análise; a inscrição será avaliada após a aprovação.
                 </p>
               </div>
@@ -361,15 +374,15 @@ export default function VendorApply() {
               >
                 <Checkbox.Indicator><Check className="h-4 w-4 text-white" /></Checkbox.Indicator>
               </Checkbox.Root>
-              <label htmlFor="aceite" className="text-sm text-marca-roxo">
+              <label htmlFor="aceite" className="text-sm text-marca-ink">
                 Li e aceito os termos de participação e o regulamento da feira
               </label>
             </div>
-            {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+            {submitError && <p className="text-sm text-marca-coral">{submitError}</p>}
           </div>
         )}
 
-        <div className="mt-6 flex justify-between border-t border-marca-roxo/10 pt-4">
+        <div className="mt-6 flex justify-between border-t border-marca-ink/10 pt-4">
           <button type="button" onClick={voltar} disabled={step === 0} className={btnVoltar}>
             Voltar
           </button>
@@ -392,11 +405,11 @@ export default function VendorApply() {
 
       <Dialog.Root open={dialogAberto} onOpenChange={setDialogAberto}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/40" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 max-h-[90vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+          <Dialog.Overlay className="fixed inset-0 bg-marca-roxoDeep/50 backdrop-blur-sm" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 max-h-[90vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-card bg-white p-6 shadow-lift">
             <div className="mb-4 flex items-center justify-between">
-              <Dialog.Title className="text-lg font-bold text-marca-roxo">Adicionar negócio</Dialog.Title>
-              <Dialog.Close className="text-marca-roxo/60 hover:text-marca-roxo">
+              <Dialog.Title className="font-display text-lg font-bold text-marca-ink">Adicionar negócio</Dialog.Title>
+              <Dialog.Close className="text-marca-ink/50 hover:text-marca-ink">
                 <X className="h-5 w-5" />
               </Dialog.Close>
             </div>

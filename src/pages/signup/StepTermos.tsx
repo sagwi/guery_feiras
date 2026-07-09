@@ -6,8 +6,8 @@ export type TermosData = { aceitouTermos: boolean; aceitouPrivacidade: boolean }
 
 const linha = 'flex items-start gap-2'
 const check =
-  'mt-0.5 h-5 w-5 shrink-0 rounded border border-marca-roxo/40 flex items-center justify-center data-[state=checked]:bg-marca-roxo'
-const link = 'text-marca-roxo underline underline-offset-2'
+  'mt-0.5 h-5 w-5 shrink-0 rounded-[6px] border border-marca-ink/30 flex items-center justify-center transition-colors data-[state=checked]:border-marca-acao data-[state=checked]:bg-marca-acao'
+const link = 'font-semibold text-marca-acao underline underline-offset-2 hover:text-marca-acaoHover'
 
 export default function StepTermos({
   onSubmit,
@@ -37,7 +37,7 @@ export default function StepTermos({
             <Check className="h-4 w-4 text-white" />
           </Checkbox.Indicator>
         </Checkbox.Root>
-        <label htmlFor="aceitouTermos" className="text-sm text-marca-roxo">
+        <label htmlFor="aceitouTermos" className="text-sm text-marca-ink">
           Li e aceito os{' '}
           <a href="/VendorManual" className={link} target="_blank" rel="noreferrer">
             Termos de Uso
@@ -56,7 +56,7 @@ export default function StepTermos({
             <Check className="h-4 w-4 text-white" />
           </Checkbox.Indicator>
         </Checkbox.Root>
-        <label htmlFor="aceitouPrivacidade" className="text-sm text-marca-roxo">
+        <label htmlFor="aceitouPrivacidade" className="text-sm text-marca-ink">
           Li e aceito a{' '}
           <a href="#" className={link} target="_blank" rel="noreferrer">
             Política de Privacidade
@@ -64,14 +64,14 @@ export default function StepTermos({
         </label>
       </div>
 
-      {erro && <p className="text-sm text-red-600">{erro}</p>}
+      {erro && <p className="text-sm text-marca-coral">{erro}</p>}
 
       <div className="flex gap-3">
         <button
           type="button"
           onClick={onBack}
           disabled={loading}
-          className="flex-1 rounded-lg border border-marca-roxo text-marca-roxo py-2 font-semibold hover:bg-marca-roxo/5 transition disabled:opacity-50"
+          className="flex-1 rounded-xl border border-marca-acao/25 py-2.5 font-semibold text-marca-acao transition hover:bg-marca-acao/5 disabled:opacity-50"
         >
           Voltar
         </button>
@@ -79,7 +79,7 @@ export default function StepTermos({
           type="button"
           disabled={!podeEnviar}
           onClick={() => onSubmit({ aceitouTermos, aceitouPrivacidade })}
-          className="flex-1 rounded-lg bg-marca-amarelo text-marca-roxo py-2 font-semibold hover:brightness-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 rounded-xl bg-marca-amarelo py-2.5 font-bold text-marca-ink shadow-amber transition hover:-translate-y-0.5 hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? 'Criando conta...' : 'Criar conta'}
         </button>

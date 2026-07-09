@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import * as Tabs from '@radix-ui/react-tabs'
-import { FileCheck, ClipboardList, AlertTriangle, CalendarCheck, Plus } from 'lucide-react'
+import {
+  FileCheck,
+  ClipboardList,
+  AlertTriangle,
+  CalendarCheck,
+  Plus,
+  Sparkles,
+} from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
 import { completarOnboarding } from '../lib/completarOnboarding'
@@ -11,7 +18,7 @@ import PropostaCard from '../components/PropostaCard'
 import type { Proposta } from '../components/PropostaCard'
 
 const tabTrigger =
-  'px-4 py-2 text-sm font-medium text-marca-roxo/70 border-b-2 border-transparent data-[state=active]:border-marca-roxo data-[state=active]:text-marca-roxo transition'
+  'px-4 py-2.5 text-sm font-semibold text-marca-ink/50 border-b-2 border-transparent transition-colors hover:text-marca-ink data-[state=active]:border-marca-acao data-[state=active]:text-marca-acao'
 
 export default function VendorPanel() {
   const { user, profile } = useAuth()
@@ -32,12 +39,19 @@ export default function VendorPanel() {
       .select('*, fairs(nome,local,imagem_url,taxa,parks(nome)), businesses(nome)')
       .eq('user_id', user.id)
       .order('criado_em', { ascending: false })
-    if (error) { console.error('VendorPanel: falha ao carregar propostas', error); setPropostas([]); setLoadingPropostas(false); return }
+    if (error) {
+      console.error('VendorPanel: falha ao carregar propostas', error)
+      setPropostas([])
+      setLoadingPropostas(false)
+      return
+    }
     setPropostas((data ?? []) as Proposta[])
     setLoadingPropostas(false)
   }, [user?.id])
 
-  useEffect(() => { carregarPropostas() }, [carregarPropostas])
+  useEffect(() => {
+    carregarPropostas()
+  }, [carregarPropostas])
 
   // ponytail: participação real (check-in) ainda não existe — Participações deriva do status 'realizada'.
   const pendencias = propostas.filter((p) => p.status === 'aprovado').length
@@ -46,41 +60,49 @@ export default function VendorPanel() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-marca-roxo">Olá, {profile?.nome ?? ''}! 👋</h1>
-        <p className="text-sm text-marca-roxo/70">Gerencie suas inscrições e participações</p>
+      <div className="relative animate-fadeUp overflow-hidden rounded-[22px] bg-gradient-to-br from-marca-roxoDark via-marca-acao to-marca-acaoHover px-7 py-6 text-white">
+        <div className="pointer-events-none absolute inset-0 [background:radial-gradient(circle_at_85%_20%,rgba(245,180,0,.35),transparent_45%),radial-gradient(circle_at_70%_120%,rgba(255,106,61,.4),transparent_40%)]" />
+        <div className="relative">
+          {profile?.curadoria_status === 'aprovado' && (
+            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
+              <Sparkles className="h-3.5 w-3.5" /> Curadoria aprovada
+            </div>
+          )}
+          <h1 className="font-display text-[28px] font-semibold">Olá, {profile?.nome ?? ''}! 👋</h1>
+          <p className="mt-0.5 text-white/80">Gerencie suas inscrições e participações nas feiras.</p>
+        </div>
       </div>
 
       {profile?.curadoria_status === 'pendente' && <CuradoriaBanner />}
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <KpiCard label="Contratos ativos" valor={contratosAtivos} icon={FileCheck} />
-        <KpiCard label="Inscrições" valor={propostas.length} icon={ClipboardList} />
-        <KpiCard label="Pendências" valor={pendencias} icon={AlertTriangle} />
-        <KpiCard label="Participações" valor={participacoes} icon={CalendarCheck} />
+        <KpiCard label="Contratos ativos" valor={contratosAtivos} icon={FileCheck} tone="roxo" />
+        <KpiCard label="Inscrições" valor={propostas.length} icon={ClipboardList} tone="azul" />
+        <KpiCard label="Pendências" valor={pendencias} icon={AlertTriangle} tone="amarelo" hint="a pagar" />
+        <KpiCard label="Participações" valor={participacoes} icon={CalendarCheck} tone="coral" />
       </div>
 
       <Tabs.Root defaultValue="propostas">
-        <Tabs.List className="flex gap-2 border-b border-marca-roxo/10">
-          <Tabs.Trigger value="propostas" className={tabTrigger}>
-            Minhas Propostas
-          </Tabs.Trigger>
-          <Tabs.Trigger value="participacoes" className={tabTrigger}>
-            Últimas Participações
-          </Tabs.Trigger>
-        </Tabs.List>
+        <div className="flex items-center justify-between border-b border-marca-ink/10">
+          <Tabs.List className="flex gap-1">
+            <Tabs.Trigger value="propostas" className={tabTrigger}>
+              Minhas Propostas
+            </Tabs.Trigger>
+            <Tabs.Trigger value="participacoes" className={tabTrigger}>
+              Últimas Participações
+            </Tabs.Trigger>
+          </Tabs.List>
+          <Link
+            to="/VendorApply"
+            className="mb-2 flex items-center gap-1.5 rounded-xl bg-marca-acao px-4 py-2 text-sm font-semibold text-white shadow-glow transition hover:-translate-y-0.5 hover:bg-marca-acaoHover"
+          >
+            <Plus className="h-4 w-4" /> Nova inscrição
+          </Link>
+        </div>
 
         <Tabs.Content value="propostas" className="space-y-4 py-6">
-          <div className="flex justify-end">
-            <Link
-              to="/VendorApply"
-              className="flex items-center gap-1 rounded-lg bg-marca-roxo px-4 py-2 text-sm font-semibold text-white hover:bg-marca-roxoClaro transition"
-            >
-              <Plus className="h-4 w-4" /> Nova inscrição
-            </Link>
-          </div>
           {!loadingPropostas && propostas.length === 0 && (
-            <p className="py-6 text-center text-sm text-marca-roxo/60">Nenhuma proposta ainda.</p>
+            <p className="py-6 text-center text-sm text-marca-ink/60">Nenhuma proposta ainda.</p>
           )}
           <div className="space-y-3">
             {propostas.map((p) => (
@@ -88,7 +110,7 @@ export default function VendorPanel() {
             ))}
           </div>
         </Tabs.Content>
-        <Tabs.Content value="participacoes" className="py-6 text-center text-sm text-marca-roxo/60">
+        <Tabs.Content value="participacoes" className="py-6 text-center text-sm text-marca-ink/60">
           Nenhuma participação registrada.
         </Tabs.Content>
       </Tabs.Root>

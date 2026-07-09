@@ -20,7 +20,7 @@ export default function AdminLayout() {
 
       <div className="flex flex-1 flex-col">
         <Topbar collapsed={collapsed} onToggleCollapsed={() => setCollapsed((v) => !v)} role="Curador" />
-        <main className="flex-1 bg-marca-roxo/5 p-6">
+        <main className="flex-1 bg-marca-creme p-7">
           <Outlet />
         </main>
       </div>

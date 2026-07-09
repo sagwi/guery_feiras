@@ -11,11 +11,15 @@ type Cadastro = {
   curadoria_motivo: string | null
 }
 
-const card = 'rounded-lg border border-marca-roxo/10 bg-white p-4 space-y-3'
-const botaoAprovar = 'rounded-lg bg-marca-roxo px-4 py-2 text-sm font-semibold text-white hover:bg-marca-roxoClaro transition disabled:opacity-50'
-const botaoReprovar = 'rounded-lg border border-red-600 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 transition disabled:opacity-50'
-const textarea = 'w-full rounded-lg border border-marca-roxo/20 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-marca-amarelo'
-const erroClasse = 'text-sm text-red-600'
+const card =
+  'animate-fadeUp space-y-3 rounded-card border border-marca-ink/[.07] bg-white p-5 shadow-card'
+const botaoAprovar =
+  'rounded-xl bg-marca-acao px-4 py-2 text-sm font-bold text-white shadow-glow transition hover:-translate-y-0.5 hover:bg-marca-acaoHover disabled:opacity-50'
+const botaoReprovar =
+  'rounded-xl border border-marca-coral/50 px-4 py-2 text-sm font-semibold text-marca-coral transition hover:bg-marca-coral/5 disabled:opacity-50'
+const textarea =
+  'w-full rounded-xl border border-marca-ink/15 px-3.5 py-2.5 outline-none transition focus:border-marca-acao focus:ring-4 focus:ring-marca-acao/10'
+const erroClasse = 'text-sm text-marca-coral'
 
 export default function CuradoriaCadastros() {
   const [cadastros, setCadastros] = useState<Cadastro[]>([])
@@ -75,26 +79,26 @@ export default function CuradoriaCadastros() {
     setMotivo('')
   }
 
-  if (loading) return <p className="text-sm text-marca-roxo/60">Carregando…</p>
+  if (loading) return <p className="text-sm text-marca-ink/60">Carregando…</p>
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-marca-roxo">Cadastros pendentes</h2>
+      <h2 className="font-display text-xl font-bold text-marca-ink">Cadastros pendentes</h2>
 
       {erro && <p className={erroClasse}>{erro}</p>}
 
       {cadastros.length === 0 && (
-        <p className="py-6 text-center text-sm text-marca-roxo/60">Nenhum cadastro pendente.</p>
+        <p className="py-6 text-center text-sm text-marca-ink/60">Nenhum cadastro pendente.</p>
       )}
 
       <div className="space-y-3">
         {cadastros.map((c) => (
           <div key={c.id} className={card}>
-            <div className="grid grid-cols-2 gap-2 text-sm text-marca-roxo md:grid-cols-4">
-              <div><span className="text-marca-roxo/60">Nome:</span> {c.nome}</div>
-              <div><span className="text-marca-roxo/60">CPF:</span> {c.cpf}</div>
-              <div><span className="text-marca-roxo/60">E-mail:</span> {c.email}</div>
-              <div><span className="text-marca-roxo/60">Telefone:</span> {c.telefone}</div>
+            <div className="grid grid-cols-2 gap-2 text-sm text-marca-ink md:grid-cols-4">
+              <div><span className="text-marca-ink/50">Nome:</span> {c.nome}</div>
+              <div><span className="text-marca-ink/50">CPF:</span> {c.cpf}</div>
+              <div><span className="text-marca-ink/50">E-mail:</span> {c.email}</div>
+              <div><span className="text-marca-ink/50">Telefone:</span> {c.telefone}</div>
             </div>
 
             {reprovandoId === c.id ? (
@@ -117,7 +121,7 @@ export default function CuradoriaCadastros() {
                   </button>
                   <button
                     type="button"
-                    className="text-sm text-marca-roxo/70 hover:text-marca-roxo"
+                    className="text-sm font-semibold text-marca-ink/60 hover:text-marca-ink"
                     onClick={() => { setReprovandoId(null); setMotivo('') }}
                   >
                     Cancelar

@@ -25,11 +25,13 @@ export const negocioFormSchema = z.object({
 
 export type NegocioFormData = z.infer<typeof negocioFormSchema>
 
-const input = 'w-full rounded-lg border border-marca-roxo/20 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-marca-amarelo'
-const label = 'block text-sm font-medium text-marca-roxo mb-1'
-const erro = 'text-sm text-red-600 mt-1'
+const input =
+  'w-full rounded-xl border border-marca-ink/15 px-3.5 py-2.5 outline-none transition focus:border-marca-acao focus:ring-4 focus:ring-marca-acao/10'
+const label = 'mb-1.5 block text-sm font-semibold text-marca-ink'
+const erro = 'mt-1 text-sm text-marca-coral'
 const checkboxRow = 'flex items-center gap-2'
-const checkboxRoot = 'h-5 w-5 rounded border border-marca-roxo/40 flex items-center justify-center data-[state=checked]:bg-marca-roxo'
+const checkboxRoot =
+  'h-5 w-5 shrink-0 rounded-[6px] border border-marca-ink/30 flex items-center justify-center transition-colors data-[state=checked]:border-marca-acao data-[state=checked]:bg-marca-acao'
 
 export default function NegocioForm({
   initial,
@@ -132,7 +134,7 @@ export default function NegocioForm({
             </Checkbox.Root>
           )}
         />
-        <label htmlFor="autoral" className="text-sm text-marca-roxo">Produção autoral</label>
+        <label htmlFor="autoral" className="text-sm text-marca-ink">Produção autoral</label>
       </div>
 
       <div className={checkboxRow}>
@@ -150,7 +152,7 @@ export default function NegocioForm({
             </Checkbox.Root>
           )}
         />
-        <label htmlFor="cnpj" className="text-sm text-marca-roxo">Possuo CNPJ</label>
+        <label htmlFor="cnpj" className="text-sm text-marca-ink">Possuo CNPJ</label>
       </div>
 
       <div className={checkboxRow}>
@@ -168,7 +170,7 @@ export default function NegocioForm({
             </Checkbox.Root>
           )}
         />
-        <label htmlFor="possuiInstagram" className="text-sm text-marca-roxo">Possuo Instagram</label>
+        <label htmlFor="possuiInstagram" className="text-sm text-marca-ink">Possuo Instagram</label>
       </div>
 
       {possuiInstagram && (
@@ -184,7 +186,7 @@ export default function NegocioForm({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full rounded-lg bg-marca-roxo text-white py-2 font-semibold hover:bg-marca-roxoClaro transition disabled:opacity-60"
+        className="w-full rounded-xl bg-marca-acao py-2.5 font-bold text-white shadow-glow transition hover:-translate-y-0.5 hover:bg-marca-acaoHover disabled:opacity-60"
       >
         {isSubmitting ? 'Salvando...' : 'Salvar'}
       </button>

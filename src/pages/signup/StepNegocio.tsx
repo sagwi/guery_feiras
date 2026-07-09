@@ -19,9 +19,12 @@ export const negocioSchema = z.object({
 
 export type NegocioData = z.infer<typeof negocioSchema>
 
-const input = 'w-full rounded-lg border border-marca-roxo/20 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-marca-amarelo'
-const label = 'block text-sm font-medium text-marca-roxo mb-1'
-const erro = 'text-sm text-red-600 mt-1'
+const input =
+  'w-full rounded-xl border border-marca-ink/15 px-3.5 py-2.5 outline-none transition focus:border-marca-acao focus:ring-4 focus:ring-marca-acao/10'
+const label = 'mb-1.5 block text-sm font-semibold text-marca-ink'
+const erro = 'mt-1 text-sm text-marca-coral'
+const checkboxRoot =
+  'h-5 w-5 shrink-0 rounded-[6px] border border-marca-ink/30 flex items-center justify-center transition-colors data-[state=checked]:border-marca-acao data-[state=checked]:bg-marca-acao'
 
 export default function StepNegocio({
   defaultValues,
@@ -62,7 +65,7 @@ export default function StepNegocio({
               id="possuiInstagram"
               checked={field.value}
               onCheckedChange={(v) => field.onChange(v === true)}
-              className="h-5 w-5 rounded border border-marca-roxo/40 flex items-center justify-center data-[state=checked]:bg-marca-roxo"
+              className={checkboxRoot}
             >
               <Checkbox.Indicator>
                 <Check className="h-4 w-4 text-white" />
@@ -70,7 +73,7 @@ export default function StepNegocio({
             </Checkbox.Root>
           )}
         />
-        <label htmlFor="possuiInstagram" className="text-sm text-marca-roxo">
+        <label htmlFor="possuiInstagram" className="text-sm text-marca-ink">
           Possuo Instagram
         </label>
       </div>
@@ -115,13 +118,13 @@ export default function StepNegocio({
         <button
           type="button"
           onClick={onBack}
-          className="flex-1 rounded-lg border border-marca-roxo text-marca-roxo py-2 font-semibold hover:bg-marca-roxo/5 transition"
+          className="flex-1 rounded-xl border border-marca-acao/25 py-2.5 font-semibold text-marca-acao transition hover:bg-marca-acao/5"
         >
           Voltar
         </button>
         <button
           type="submit"
-          className="flex-1 rounded-lg bg-marca-roxo text-white py-2 font-semibold hover:bg-marca-roxoClaro transition"
+          className="flex-1 rounded-xl bg-marca-acao py-2.5 font-bold text-white shadow-glow transition hover:-translate-y-0.5 hover:bg-marca-acaoHover"
         >
           Próximo
         </button>

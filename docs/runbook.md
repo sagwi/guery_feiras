@@ -22,7 +22,24 @@ Nenhuma delas dropa dados. Para reverter uma migration específica:
 
 - `npx -p metaharness@latest harness score .` — score de estrutura/engenharia do repo.
 - Supabase Advisors (security + performance) — checar se algo novo apareceu escopado a `guery_feiras`.
-- Rodar o fluxo crítico manualmente: login curador → aprovar inscrição → comerciante paga → indicadores atualiza.
+- `npm run test:e2e` — trava login/redirect por papel (curador vs comerciante) e menu com item único ativo.
+
+## E2E (`npm run test:e2e`)
+
+Roda sob demanda, **não** em todo push do CI. Os testes fazem login de verdade contra o
+Supabase de produção (`pyyyrzwdidcronhidkwb`) usando contas de demo dedicadas — esse banco
+é compartilhado com outros clientes, então evitamos automatizar isso a cada commit.
+
+Quando rodar: antes de mexer em login/redirect, RLS, ou navegação do menu — os pontos que
+já quebraram uma vez nesta sessão.
+
+```
+npm run dev &      # se ainda não tiver um servidor local rodando em :5173
+npm run test:e2e
+```
+
+Contas usadas: `curadoria.demo@gueryfeiras.dev` e `nathan.cruz@demo.gueryfeiras.dev` (senha
+`Demo@123` nas duas) — são contas de demonstração, seguras para reuso repetido.
 
 ## Contas de referência
 

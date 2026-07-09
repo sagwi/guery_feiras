@@ -1,6 +1,6 @@
 # Guery Feiras - HANDOFF
 
-Atualizado em 2026-07-08.
+Atualizado em 2026-07-09.
 
 ## Estado atual
 
@@ -23,7 +23,19 @@ Regras antes de qualquer mudança:
 - Preferir alterações reversíveis e pequenas.
 - Auth settings como `Site URL` são globais do projeto. Evitar mudar. Se necessário para e-mail, adicionar somente allowlist em `Additional Redirect URLs`.
 
-## Últimos commits relevantes
+## Feito em 2026-07-09
+
+- `d3b49c9` — canal de suporte real: tabela `problem_reports` (migration `0010`, RLS) +
+  botão "Reportar problema" no app + aba **Suporte** na curadoria.
+- `cddd4c1` — E2E Playwright (`e2e/auth-redirect.spec.ts`): login/redirect por papel,
+  sob demanda apenas (nunca em CI — login real contra produção). Ver `docs/runbook.md`.
+- `abd06e4` — observabilidade: Sentry (`@sentry/react`) em `src/main.tsx`. Só reporta em
+  produção; captura `console.error` como evento. Env var nova: `VITE_SENTRY_DSN` (Vercel OK).
+- `64ef06f`..`8949e1f` — CI no GitHub Actions (build + test com env placeholder, Node 24) +
+  hardening de RLS/performance (migration `0009`) + `docs/runbook.md`.
+- CLAUDE.md do projeto criado/aprimorado (mapa de arquitetura, Edge Functions, DoD).
+
+## Últimos commits relevantes (2026-07-08 e antes)
 
 - `e095a64` - ignora skills locais de agente.
 - `19c8dc7` - força confirmação de e-mail voltar para a origem atual do site.

@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { Users, ClipboardCheck } from 'lucide-react'
+import { Users, ClipboardCheck, BarChart3 } from 'lucide-react'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 
 const itensAdmin = [
   { to: '/curadoria', label: 'Cadastros', icon: Users },
   { to: '/curadoria/inscricoes', label: 'Inscrições', icon: ClipboardCheck },
+  { to: '/curadoria/indicadores', label: 'Indicadores', icon: BarChart3 },
 ]
 
 export default function AdminLayout() {

@@ -17,6 +17,7 @@ import ChangePassword from './pages/ChangePassword'
 import CuradoriaCadastros from './pages/curadoria/CuradoriaCadastros'
 import CuradoriaInscricoes from './pages/curadoria/CuradoriaInscricoes'
 import CuradoriaIndicadores from './pages/curadoria/CuradoriaIndicadores'
+import CuradoriaSuporte from './pages/curadoria/CuradoriaSuporte'
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
           <Route path="/curadoria" element={<CuradoriaCadastros />} />
           <Route path="/curadoria/inscricoes" element={<CuradoriaInscricoes />} />
           <Route path="/curadoria/indicadores" element={<CuradoriaIndicadores />} />
+          <Route path="/curadoria/suporte" element={<CuradoriaSuporte />} />
         </Route>
       </Route>
 

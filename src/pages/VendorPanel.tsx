@@ -110,8 +110,17 @@ export default function VendorPanel() {
             ))}
           </div>
         </Tabs.Content>
-        <Tabs.Content value="participacoes" className="py-6 text-center text-sm text-marca-ink/60">
-          Nenhuma participação registrada.
+        <Tabs.Content value="participacoes" className="space-y-4 py-6">
+          {!loadingPropostas && participacoes === 0 && (
+            <p className="py-6 text-center text-sm text-marca-ink/60">Nenhuma participação registrada.</p>
+          )}
+          <div className="space-y-3">
+            {propostas
+              .filter((p) => p.status === 'realizada')
+              .map((p) => (
+                <PropostaCard key={p.id} proposta={p} />
+              ))}
+          </div>
         </Tabs.Content>
       </Tabs.Root>
     </div>

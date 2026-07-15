@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { STATUS_LABELS, transicaoCuradoria, transicaoCancelamentoOrganizador, geraCreditoAoCancelar, type StatusInscricao } from '../../lib/statusInscricao'
+import { formatarDataBR, formatarMoeda } from '../../lib/formatacao'
+import { STATUS_LABELS, type StatusInscricao } from '../../lib/statusInscricao'
 
 type Inscricao = {
   id: string
@@ -23,15 +24,6 @@ const botaoReprovar =
 const textarea =
   'w-full rounded-xl border border-marca-ink/15 px-3.5 py-2.5 outline-none transition focus:border-marca-acao focus:ring-4 focus:ring-marca-acao/10'
 const erroClasse = 'text-sm text-marca-coral'
-
-function formatarDataBR(iso: string): string {
-  const [y, m, d] = iso.split('-')
-  return `${d}/${m}/${y}`
-}
-
-function formatarMoeda(v: number): string {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
 
 export default function CuradoriaInscricoes() {
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([])
@@ -93,28 +85,16 @@ export default function CuradoriaInscricoes() {
   async function decidir(inscricao: Inscricao, decisao: 'aprovar' | 'reprovar', motivoReprovacao?: string) {
     setErro(null)
     setProcessandoId(inscricao.id)
-    const novoStatus = transicaoCuradoria(inscricao.status, decisao)
-    const { error } = await supabase.from('applications').update({ status: novoStatus }).eq('id', inscricao.id)
+    const { error } = await supabase.rpc('curar_inscricao', {
+      p_application_id: inscricao.id,
+      p_decisao: decisao,
+      p_motivo: motivoReprovacao ?? null,
+    })
     if (error) {
       setErro('Falha ao atualizar inscrição: ' + error.message)
       setProcessandoId(null)
       return
     }
-    await supabase.from('notifications').insert(
-      decisao === 'aprovar'
-        ? {
-            user_id: inscricao.user_id,
-            tipo: 'inscricao_aprovada',
-            titulo: 'Inscrição aprovada ✅',
-            corpo: 'Sua inscrição foi aprovada. Realize o pagamento para confirmar.',
-          }
-        : {
-            user_id: inscricao.user_id,
-            tipo: 'inscricao_reprovada',
-            titulo: 'Inscrição reprovada',
-            corpo: motivoReprovacao ?? '',
-          },
-    )
     setInscricoes((prev) => prev.filter((i) => i.id !== inscricao.id))
     setProcessandoId(null)
     setReprovandoId(null)
@@ -124,42 +104,14 @@ export default function CuradoriaInscricoes() {
   async function cancelarPeloOrganizador(inscricao: Inscricao) {
     setErro(null)
     setProcessandoId(inscricao.id)
-    const novoStatus = transicaoCancelamentoOrganizador(inscricao.status)
-    const { error } = await supabase.from('applications').update({ status: novoStatus }).eq('id', inscricao.id)
+    const { error } = await supabase.rpc('cancelar_data_organizador', {
+      p_application_id: inscricao.id,
+    })
     if (error) {
       setErro('Falha ao cancelar data: ' + error.message)
       setProcessandoId(null)
       return
     }
-
-    // Crédito só se a data estava paga (confirmada): valor exato do pagamento confirmado.
-    if (geraCreditoAoCancelar(inscricao.status)) {
-      const { data: pags } = await supabase
-        .from('payments')
-        .select('valor')
-        .eq('application_id', inscricao.id)
-        .eq('status', 'confirmado')
-      const valor = (pags ?? []).reduce((acc, p) => acc + Number(p.valor), 0)
-      if (valor > 0) {
-        await supabase.from('wallet_transactions').insert({
-          user_id: inscricao.user_id,
-          tipo: 'entrada',
-          valor,
-          referencia: `Crédito: ${inscricao.fairs?.nome ?? 'feira'} cancelada pelo organizador`,
-          application_id: inscricao.id,
-        })
-      }
-    }
-
-    await supabase.from('notifications').insert({
-      user_id: inscricao.user_id,
-      tipo: 'feira_cancelada',
-      titulo: 'Feira cancelada pelo organizador',
-      corpo: geraCreditoAoCancelar(inscricao.status)
-        ? 'Uma data que você pagou foi cancelada. Um crédito foi gerado na sua carteira.'
-        : 'Uma data da sua inscrição foi cancelada pelo organizador.',
-    })
-
     setAtivas((prev) => prev.filter((i) => i.id !== inscricao.id))
     setProcessandoId(null)
   }

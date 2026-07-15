@@ -3,17 +3,10 @@ import { Wallet, ArrowDownCircle, ArrowUpCircle } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
 import KpiCard from '../components/KpiCard'
+import { formatarDataHoraBR, formatarMoeda } from '../lib/formatacao'
 import { saldo, totalRecebido, totalUtilizado, type WalletTx } from '../lib/carteira'
 
 type Extrato = WalletTx & { id: string; referencia: string; criado_em: string }
-
-function formatarMoeda(v: number): string {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
-
-function formatarDataHoraBR(iso: string): string {
-  return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
 
 export default function VendorWallet() {
   const { user } = useAuth()

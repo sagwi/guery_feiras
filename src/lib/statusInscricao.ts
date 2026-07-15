@@ -3,16 +3,64 @@ export type StatusInscricao =
   | 'reprovado' | 'cancelado_pagamento' | 'cancelado_organizador' | 'expirado'
 
 // label + classes de badge por status (fonte única; reaproveitável em PropostaCard/curadoria).
-export const STATUS_LABELS: Record<StatusInscricao, { label: string; cor: string }> = {
-  pendente: { label: 'Pendente', cor: 'bg-amber-100 text-amber-800' },
-  em_analise: { label: 'Em análise', cor: 'bg-blue-100 text-blue-800' },
-  aprovado: { label: 'Aprovado', cor: 'bg-green-100 text-green-800' },
-  confirmado: { label: 'Confirmado', cor: 'bg-green-100 text-green-800' },
-  realizada: { label: 'Realizada', cor: 'bg-gray-100 text-gray-700' },
-  reprovado: { label: 'Reprovado', cor: 'bg-red-100 text-red-800' },
-  cancelado_pagamento: { label: 'Cancelado por falta de pagamento', cor: 'bg-red-100 text-red-800' },
-  cancelado_organizador: { label: 'Cancelado pelo organizador', cor: 'bg-gray-100 text-gray-700' },
-  expirado: { label: 'Expirado', cor: 'bg-gray-100 text-gray-700' },
+export const STATUS_LABELS: Record<
+  StatusInscricao,
+  { label: string; cor: string; propostaClasses: string; dot: string }
+> = {
+  pendente: {
+    label: 'Pendente',
+    cor: 'bg-amber-100 text-amber-800',
+    propostaClasses: 'bg-[#FFEFCC] text-[#8A6300]',
+    dot: 'bg-marca-amarelo',
+  },
+  em_analise: {
+    label: 'Em análise',
+    cor: 'bg-blue-100 text-blue-800',
+    propostaClasses: 'bg-[#E5EEFE] text-[#1D4ED8]',
+    dot: 'bg-[#2563EB]',
+  },
+  aprovado: {
+    label: 'Aprovado',
+    cor: 'bg-green-100 text-green-800',
+    propostaClasses: 'bg-[#D6F5E9] text-[#0B7A54]',
+    dot: 'bg-marca-verde',
+  },
+  confirmado: {
+    label: 'Confirmado',
+    cor: 'bg-green-100 text-green-800',
+    propostaClasses: 'bg-[#D6F5E9] text-[#0B7A54]',
+    dot: 'bg-marca-verde',
+  },
+  realizada: {
+    label: 'Realizada',
+    cor: 'bg-gray-100 text-gray-700',
+    propostaClasses: 'bg-[#EDEAF3] text-[#5B5470]',
+    dot: 'bg-[#9A93AD]',
+  },
+  reprovado: {
+    label: 'Reprovado',
+    cor: 'bg-red-100 text-red-800',
+    propostaClasses: 'bg-[#FEE7E0] text-[#C43D1C]',
+    dot: 'bg-marca-coral',
+  },
+  cancelado_pagamento: {
+    label: 'Cancelado por falta de pagamento',
+    cor: 'bg-red-100 text-red-800',
+    propostaClasses: 'bg-[#FEE7E0] text-[#C43D1C]',
+    dot: 'bg-marca-coral',
+  },
+  cancelado_organizador: {
+    label: 'Cancelado pelo organizador',
+    cor: 'bg-gray-100 text-gray-700',
+    propostaClasses: 'bg-[#EDEAF3] text-[#5B5470]',
+    dot: 'bg-[#9A93AD]',
+  },
+  expirado: {
+    label: 'Expirado',
+    cor: 'bg-gray-100 text-gray-700',
+    propostaClasses: 'bg-[#EDEAF3] text-[#5B5470]',
+    dot: 'bg-[#9A93AD]',
+  },
 }
 
 // O curador só pode agir sobre inscrições ainda em análise.

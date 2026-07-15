@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Store, Calendar } from 'lucide-react'
+import { STATUS_LABELS, type StatusInscricao } from '../lib/statusInscricao'
+import { formatarDataBR, formatarMoeda } from '../lib/formatacao'
 
 export type Proposta = {
   id: string
@@ -15,39 +17,19 @@ export type Proposta = {
   businesses: { nome: string } | null
 }
 
-const STATUS: Record<string, { label: string; classes: string; dot: string }> = {
-  pendente: { label: 'Pendente', classes: 'bg-[#FFEFCC] text-[#8A6300]', dot: 'bg-marca-amarelo' },
-  em_analise: { label: 'Em análise', classes: 'bg-[#E5EEFE] text-[#1D4ED8]', dot: 'bg-[#2563EB]' },
-  aprovado: { label: 'Aprovado', classes: 'bg-[#D6F5E9] text-[#0B7A54]', dot: 'bg-marca-verde' },
-  confirmado: { label: 'Confirmado', classes: 'bg-[#D6F5E9] text-[#0B7A54]', dot: 'bg-marca-verde' },
-  realizada: { label: 'Realizada', classes: 'bg-[#EDEAF3] text-[#5B5470]', dot: 'bg-[#9A93AD]' },
-  reprovado: { label: 'Reprovado', classes: 'bg-[#FEE7E0] text-[#C43D1C]', dot: 'bg-marca-coral' },
-  cancelado_pagamento: {
-    label: 'Cancelado por falta de pagamento',
-    classes: 'bg-[#FEE7E0] text-[#C43D1C]',
-    dot: 'bg-marca-coral',
-  },
-  cancelado_organizador: {
-    label: 'Cancelado pelo organizador',
-    classes: 'bg-[#EDEAF3] text-[#5B5470]',
-    dot: 'bg-[#9A93AD]',
-  },
-  expirado: { label: 'Expirado', classes: 'bg-[#EDEAF3] text-[#5B5470]', dot: 'bg-[#9A93AD]' },
-}
-
-function formatarDataBR(iso: string): string {
-  const [y, m, d] = iso.split('-')
-  return `${d}/${m}/${y}`
-}
-
-function formatarMoeda(v: number): string {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+const fallbackBadge = {
+  label: '',
+  propostaClasses: 'bg-[#EDEAF3] text-[#5B5470]',
+  dot: 'bg-[#9A93AD]',
 }
 
 export default function PropostaCard({ proposta }: { proposta: Proposta }) {
   const fair = proposta.fairs
-  const status =
-    STATUS[proposta.status] ?? { label: proposta.status, classes: 'bg-[#EDEAF3] text-[#5B5470]', dot: 'bg-[#9A93AD]' }
+  const statusKey = proposta.status as StatusInscricao
+  const statusInfo = STATUS_LABELS[statusKey] ?? {
+    ...fallbackBadge,
+    label: proposta.status,
+  }
 
   return (
     <div className="flex animate-fadeUp overflow-hidden rounded-card border border-marca-ink/[.07] bg-white shadow-card transition-transform duration-300 hover:-translate-y-1 hover:shadow-lift">
@@ -75,10 +57,10 @@ export default function PropostaCard({ proposta }: { proposta: Proposta }) {
             </p>
           </div>
           <span
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${status.classes}`}
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${statusInfo.propostaClasses}`}
           >
-            <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
-            {status.label}
+            <span className={`h-1.5 w-1.5 rounded-full ${statusInfo.dot}`} />
+            {statusInfo.label}
           </span>
         </div>
 

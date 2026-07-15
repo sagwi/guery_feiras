@@ -1,6 +1,11 @@
 # Guery Feiras - HANDOFF
 
-Atualizado em 2026-07-15.
+Atualizado em 2026-07-15 (roadmap implementado).
+
+## Consulta rápida do código
+
+- Grafo estrutural versionado em `docs/graph/` (`GRAPH_REPORT.md`, `graph.html`, `graph.json`).
+- Mapa de arquitetura: `CLAUDE.md`. Specs de produto: `vivafeiras-vendorpanel-specs.md`.
 
 ## Estado atual
 
@@ -35,7 +40,19 @@ Regras antes de qualquer mudança:
   hardening de RLS/performance (migration `0009`) + `docs/runbook.md`.
 - CLAUDE.md do projeto criado/aprimorado (mapa de arquitetura, Edge Functions, DoD).
 
-## Feito em 2026-07-15
+## Feito em 2026-07-15 (roadmap)
+
+- **Grafo do código** em `docs/graph/` (401 nós, 580 arestas) para navegação no GitHub.
+- **Migration `0011`** — hardening RLS: dono não atualiza `applications`; revoga INSERT direto em
+  `payments`/`wallet_transactions`; `confirmar_pagamento` usa taxa real da feira no servidor;
+  RPCs transacionais `curar_inscricao`, `cancelar_data_organizador`, `expirar_inscricoes_sem_pagamento`.
+- **Edge Function `expirar-pagamentos`** — job de cancelamento por falta de pagamento (7 dias).
+- **UX pagamentos:** seção Meus Créditos em `/VendorPayments`, feedback `?pago=1`/`?cancelado=1`,
+  label "Cartão" no modal (PIX adiado), aviso de crédito no passo 3 de `/VendorApply`.
+- **Polish:** `src/lib/formatacao.ts`, badges unificados em `statusInscricao.ts`, corrida do
+  `AuthProvider` corrigida, aba Participações lista inscrições `realizada`.
+
+## Feito em 2026-07-15 (Stripe + curadoria)
 
 - Gateway de pagamento trocado: **Pagar.me fake → Stripe Checkout real** (commit `9e57c50`).
   - Edge Functions `supabase/functions/stripe-checkout` (cria Checkout Session hospedada,
@@ -183,23 +200,16 @@ O projeto não tinha env vars até 2026-07-08. Agora Production tem as duas `VIT
 https://guery-feiras.vercel.app/**
 ```
 
-4. **Stripe — fechar a integração real (prioridade):**
-   - Configurar `STRIPE_WEBHOOK_SECRET` (ver "Feito em 2026-07-15" acima) — sem isso o
+4. **Stripe — fechar a integração real (prioridade operacional):**
+   - Configurar `STRIPE_WEBHOOK_SECRET` (ver seção Stripe acima) — sem isso o
      pagamento fica sem confirmação automática.
    - Testar ponta-a-ponta em produção com cartão de teste `4242 4242 4242 4242`.
-   - Terminar onboarding da conta Stripe (perfil do negócio + ToS) e reativar PIX quando
-     o usuário decidir.
+   - Terminar onboarding da conta Stripe e reativar PIX quando decidir.
+   - Agendar cron no Supabase para `expirar-pagamentos` (opcional: `CRON_SECRET`).
 
 5. Próximas features ainda fora de escopo:
-   - seção "Meus Créditos" em `/VendorPayments`
-   - "usar crédito" no passo 3 da inscrição
-   - combos
-   - cron de cancelamento por falta de pagamento
+   - combos (1 pagamento → N datas)
 
 ## Observação técnica
 
-Existe um log menor pré-existente:
-
-- `AuthProvider` pode logar "falha ao carregar profile" em reload completo por uma corrida entre `.single()` e refresh de sessão.
-
-Não foi tratado nesta rodada.
+- `AuthProvider`: corrida no reload tratada com `onAuthStateChange` + `maybeSingle()`.

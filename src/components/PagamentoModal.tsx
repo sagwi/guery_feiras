@@ -3,6 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
+import { formatarMoeda } from '../lib/formatacao'
 import { type StatusInscricao } from '../lib/statusInscricao'
 import { saldo, type WalletTx } from '../lib/carteira'
 
@@ -20,10 +21,6 @@ const metodoBtn = (ativo: boolean) =>
       ? 'border-marca-acao bg-marca-acao/5 text-marca-acao'
       : 'border-marca-ink/15 text-marca-ink/60 hover:border-marca-ink/30'
   }`
-
-function formatarMoeda(v: number): string {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
 
 export default function PagamentoModal({
   application,
@@ -52,7 +49,7 @@ export default function PagamentoModal({
       .then(({ data }) => setSaldoDisponivel(saldo((data ?? []) as WalletTx[])))
   }, [user?.id])
 
-  // Cartão/PIX: Stripe Checkout hospedado — cria a sessão e redireciona.
+  // Cartão: Stripe Checkout hospedado — cria a sessão e redireciona.
   async function pagarComGateway() {
     setErro(null)
     setProcessando(true)
@@ -68,7 +65,7 @@ export default function PagamentoModal({
     }
   }
 
-  // Crédito: fora do gateway, debita a carteira interna direto via RPC transacional.
+  // Crédito: debita a carteira via RPC transacional (taxa recalculada no servidor).
   async function pagarComCredito() {
     if (!user?.id) return
     setErro(null)
@@ -108,7 +105,7 @@ export default function PagamentoModal({
           <div className="p-6">
             <div className="mb-4 flex gap-2">
               <button type="button" className={metodoBtn(metodo === 'gateway')} onClick={() => setMetodo('gateway')}>
-                Cartão / PIX
+                Cartão
               </button>
               {temCreditoSuficiente && (
                 <button type="button" className={metodoBtn(metodo === 'credito')} onClick={() => setMetodo('credito')}>

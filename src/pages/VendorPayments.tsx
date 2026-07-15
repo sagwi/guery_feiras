@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { CreditCard, CheckCircle2 } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { CreditCard, CheckCircle2, Wallet, XCircle } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
+import { saldo, type WalletTx } from '../lib/carteira'
+import { formatarDataBR, formatarDataHoraBR, formatarMoeda } from '../lib/formatacao'
 import PagamentoModal from '../components/PagamentoModal'
 import type { AplicacaoPagavel } from '../components/PagamentoModal'
 
@@ -24,36 +27,37 @@ const card =
 const badgeConfirmado =
   'inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#D6F5E9] px-2.5 py-1 text-xs font-semibold text-[#0B7A54]'
 
-function formatarDataBR(iso: string): string {
-  const [y, m, d] = iso.split('-')
-  return `${d}/${m}/${y}`
-}
-
-function formatarDataHoraBR(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
-
-function formatarMoeda(v: number): string {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
-
 const metodoLabel: Record<string, string> = { pix: 'PIX', cartao: 'Cartão', credito: 'Crédito' }
 
 export default function VendorPayments() {
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [pendentes, setPendentes] = useState<InscricaoPagavel[]>([])
   const [confirmados, setConfirmados] = useState<PagamentoConfirmado[]>([])
+  const [saldoCredito, setSaldoCredito] = useState(0)
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
   const [pagando, setPagando] = useState<InscricaoPagavel | null>(null)
+  const [feedbackStripe, setFeedbackStripe] = useState<'pago' | 'cancelado' | null>(null)
+
+  useEffect(() => {
+    if (searchParams.get('pago') === '1') {
+      setFeedbackStripe('pago')
+      searchParams.delete('pago')
+      setSearchParams(searchParams, { replace: true })
+    } else if (searchParams.get('cancelado') === '1') {
+      setFeedbackStripe('cancelado')
+      searchParams.delete('cancelado')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
 
   const carregar = useCallback(async () => {
     if (!user?.id) return
     setLoading(true)
     setErro(null)
 
-    const [pendentesRes, confirmadosRes] = await Promise.all([
+    const [pendentesRes, confirmadosRes, walletRes] = await Promise.all([
       supabase
         .from('applications')
         .select('*, businesses(nome), fairs(nome,taxa,parks(nome))')
@@ -65,6 +69,7 @@ export default function VendorPayments() {
         .eq('user_id', user.id)
         .eq('status', 'confirmado')
         .order('pago_em', { ascending: false }),
+      supabase.from('wallet_transactions').select('tipo,valor').eq('user_id', user.id),
     ])
 
     if (pendentesRes.error) {
@@ -81,12 +86,16 @@ export default function VendorPayments() {
       setConfirmados((confirmadosRes.data ?? []) as PagamentoConfirmado[])
     }
 
+    if (!walletRes.error) {
+      setSaldoCredito(saldo((walletRes.data ?? []) as WalletTx[]))
+    }
+
     setLoading(false)
   }, [user?.id])
 
   useEffect(() => { carregar() }, [carregar])
 
-  const onPago = () => { setPagando(null); carregar() }
+  const onPago = () => { setPagando(null); setFeedbackStripe('pago'); carregar() }
 
   if (loading) return <p className="text-sm text-marca-ink/60">Carregando…</p>
 
@@ -99,7 +108,46 @@ export default function VendorPayments() {
         </p>
       </div>
 
+      {feedbackStripe === 'pago' && (
+        <div className="flex items-center gap-3 rounded-xl border border-[#0B7A54]/30 bg-[#D6F5E9] px-4 py-3 text-sm text-[#0B7A54]">
+          <CheckCircle2 className="h-5 w-5 shrink-0" />
+          Pagamento confirmado com sucesso.
+        </div>
+      )}
+      {feedbackStripe === 'cancelado' && (
+        <div className="flex items-center gap-3 rounded-xl border border-marca-coral/30 bg-marca-coral/10 px-4 py-3 text-sm text-marca-coral">
+          <XCircle className="h-5 w-5 shrink-0" />
+          Pagamento cancelado. Você pode tentar novamente quando quiser.
+        </div>
+      )}
+
       {erro && <p className="text-sm text-marca-coral">{erro}</p>}
+
+      <section className="space-y-3">
+        <h2 className="font-display text-lg font-semibold text-marca-ink">Meus créditos</h2>
+        <div className={`${card} flex flex-wrap items-center justify-between gap-3`}>
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-marca-acao/10 text-marca-acao">
+              <Wallet className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-sm text-marca-ink/60">Saldo disponível na carteira</p>
+              <p className="font-display text-xl font-bold text-marca-ink">{formatarMoeda(saldoCredito)}</p>
+            </div>
+          </div>
+          <Link
+            to="/VendorWallet"
+            className="rounded-xl border border-marca-acao/25 px-4 py-2 text-sm font-semibold text-marca-acao transition hover:bg-marca-acao/5"
+          >
+            Ver extrato
+          </Link>
+        </div>
+        {saldoCredito > 0 && (
+          <p className="text-sm text-marca-ink/60">
+            Ao pagar uma inscrição aprovada, você pode usar crédito se o saldo cobrir a taxa.
+          </p>
+        )}
+      </section>
 
       <section className="space-y-3">
         <h2 className="font-display text-lg font-semibold text-marca-ink">Pagamentos pendentes</h2>

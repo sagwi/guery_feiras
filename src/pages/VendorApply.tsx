@@ -2,10 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import * as Dialog from '@radix-ui/react-dialog'
 import * as Checkbox from '@radix-ui/react-checkbox'
-import { X, Plus, Store, Clock, Check, CheckCircle2 } from 'lucide-react'
+import { X, Plus, Store, Clock, Check, CheckCircle2, Wallet } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
 import { datasDisponiveis } from '../lib/datasFeira'
+import { saldo, type WalletTx } from '../lib/carteira'
+import { formatarDataBR, formatarMoeda } from '../lib/formatacao'
 import NegocioForm from '../components/NegocioForm'
 
 type Business = {
@@ -34,15 +36,6 @@ const PASSOS = ['Marca', 'Feira e Data', 'Termos']
 
 function diasLabel(dias: number[]): string {
   return [...dias].sort((a, b) => a - b).map((d) => DIAS_SEMANA[d]).join(', ')
-}
-
-function formatarDataBR(iso: string): string {
-  const [y, m, d] = iso.split('-')
-  return `${d}/${m}/${y}`
-}
-
-function formatarMoeda(v: number): string {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 const cardBase = 'w-full space-y-2 rounded-card border p-4 text-left transition'
@@ -83,6 +76,7 @@ export default function VendorApply() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [enviado, setEnviado] = useState(false)
+  const [saldoCredito, setSaldoCredito] = useState(0)
 
   const carregarBusinesses = useCallback(async (): Promise<Business[]> => {
     if (!user?.id) return []
@@ -127,6 +121,15 @@ export default function VendorApply() {
       setLoadingFairs(false)
     })
     return () => { ativo = false }
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!user?.id) return
+    supabase
+      .from('wallet_transactions')
+      .select('tipo,valor')
+      .eq('user_id', user.id)
+      .then(({ data }) => setSaldoCredito(saldo((data ?? []) as WalletTx[])))
   }, [user?.id])
 
   const fairsVisiveis = useMemo(
@@ -362,6 +365,15 @@ export default function VendorApply() {
                 <Clock className="h-5 w-5 shrink-0 text-[#B47C00]" />
                 <p className="text-sm text-marca-ink">
                   Seu cadastro ainda está em análise; a inscrição será avaliada após a aprovação.
+                </p>
+              </div>
+            )}
+            {saldoCredito > 0 && selectedFair && saldoCredito >= selectedFair.taxa && (
+              <div className="flex items-center gap-3 rounded-xl border border-marca-acao/20 bg-marca-acao/5 px-4 py-3">
+                <Wallet className="h-5 w-5 shrink-0 text-marca-acao" />
+                <p className="text-sm text-marca-ink">
+                  Você tem {formatarMoeda(saldoCredito)} de crédito. Após aprovação da inscrição,
+                  poderá pagar com crédito em <strong>Pagamentos</strong>.
                 </p>
               </div>
             )}

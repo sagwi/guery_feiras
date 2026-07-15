@@ -1,6 +1,6 @@
 # Guery Feiras - HANDOFF
 
-Atualizado em 2026-07-09.
+Atualizado em 2026-07-15.
 
 ## Estado atual
 
@@ -35,15 +35,60 @@ Regras antes de qualquer mudança:
   hardening de RLS/performance (migration `0009`) + `docs/runbook.md`.
 - CLAUDE.md do projeto criado/aprimorado (mapa de arquitetura, Edge Functions, DoD).
 
+## Feito em 2026-07-15
+
+- Gateway de pagamento trocado: **Pagar.me fake → Stripe Checkout real** (commit `9e57c50`).
+  - Edge Functions `supabase/functions/stripe-checkout` (cria Checkout Session hospedada,
+    revalida taxa/dono via RLS) e `supabase/functions/stripe-webhook` (confirma pagamento
+    via `checkout.session.completed`, chama RPC nova `confirmar_pagamento_admin` —
+    migration `0007`, variante service-role da RPC transacional existente).
+  - Gotcha resolvido: Stripe SDK em Deno precisa de
+    `httpClient: Stripe.createFetchHttpClient()` no construtor — sem isso dá erro genérico
+    de conexão (o cliente padrão tenta usar o módulo `http` do Node, que não existe no
+    runtime de Edge Function).
+  - **MVP só cartão** — PIX foi removido de `payment_method_types` por decisão do usuário
+    (conta Stripe ainda não terminou onboarding: `charges_enabled: false`,
+    `capabilities: {}`). Reativar é só devolver `'pix'` no array em
+    `supabase/functions/stripe-checkout/index.ts` (linha comentada) + terminar onboarding
+    em https://dashboard.stripe.com/settings/business/profile e ativar o método em
+    https://dashboard.stripe.com/settings/payment_methods.
+  - `src/lib/pagarme.ts` / `pagarme.test.ts` / `supabase/functions/pagarme/` removidos.
+  - `PagamentoModal.tsx` simplificado: sem QR fake / form de cartão manual / polling —
+    agora é um botão que chama `stripe-checkout` e redireciona pra `session.url`.
+  - **PENDENTE (usuário):** `STRIPE_WEBHOOK_SECRET` — precisa criar o endpoint de webhook
+    no dashboard da Stripe (`https://dashboard.stripe.com/test/webhooks`, URL
+    `https://pyyyrzwdidcronhidkwb.supabase.co/functions/v1/stripe-webhook`, evento
+    `checkout.session.completed`) e rodar
+    `npx supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...`. Sem isso o webhook não
+    confirma pagamento automaticamente (checkout cria a sessão normalmente, mas a
+    confirmação no banco fica pendente até o secret ser configurado).
+  - Verificado: Checkout Session real criada com sucesso (200, URL válida do Stripe) via
+    preview; não foi possível completar o pagamento ponta-a-ponta no sandbox (bloqueia
+    navegação pra domínio externo) — falta validação manual com cartão de teste
+    `4242 4242 4242 4242`.
+
+- Área de curadoria (admin) redesenhada pra seguir o padrão visual do painel do
+  comerciante (commit `a7a5ba9`, depois estendida com Indicadores/Suporte em commits
+  seguintes já presentes no histórico). `Sidebar`/`Topbar` viraram componentes
+  reutilizáveis (prop `itens` e `role`) em vez de duplicar layout — `AdminLayout` usa os
+  dois com badge "Curador" no topo.
+
+- Acesso de teste criado: `teste.stripe@guery.dev` / `teste123456` — comerciante com
+  negócio cadastrado e inscrição **aprovada** em "Feira de Sábado da Jaqueira" (R$ 200,
+  pronta pra testar o botão Pagar). `gf_admin=false` (é conta de comerciante, não admin).
+
+
 ## Últimos commits relevantes (2026-07-08 e antes)
 
 - `e095a64` - ignora skills locais de agente.
 - `19c8dc7` - força confirmação de e-mail voltar para a origem atual do site.
 - `87b34eb` - ignora estado local da Vercel.
 - `f165072` - `vercel.json` com rewrite de SPA para deep links.
-- `4130814` / `36f7b0c` - RPC `confirmar_pagamento` + esqueleto de Edge Function Pagar.me.
-- `2d6a5fb` / `7ed2f2a` - gateway Pagar.me fake.
+- `4130814` / `36f7b0c` - RPC `confirmar_pagamento` + esqueleto de Edge Function Pagar.me (substituído em 2026-07-15, ver seção acima).
+- `2d6a5fb` / `7ed2f2a` - gateway Pagar.me fake (removido em 2026-07-15).
 - `c2fe7a2` - merge Fatia 5, carteira/crédito.
+- `9e57c50` - Stripe Checkout real substitui o gateway fake (ver "Feito em 2026-07-15").
+- `a7a5ba9` - curadoria segue o layout do painel do comerciante (ver "Feito em 2026-07-15").
 
 ## Correções feitas em 2026-07-08
 
@@ -86,6 +131,12 @@ Criados diretamente no Auth do Supabase `pyyyrzwdidcronhidkwb`, com autorizaçã
   - `gf_admin`: false
   - `curadoria_status`: aprovado
 
+- `teste.stripe@guery.dev` / `teste123456`
+  - Tipo: comerciante (conta de teste, criada via SQL — ver skill `supabase-breninja`)
+  - Negócio: "Comerciante Teste Stripe"
+  - Tem inscrição **aprovada** em "Feira de Sábado da Jaqueira" (R$ 200) — pronta pra testar o Checkout da Stripe
+  - `gf_admin`: false
+
 Senha temporária não foi gravada neste arquivo. Consultar a conversa atual se ainda necessário e trocar a senha depois do primeiro acesso.
 
 Validação feita via `supabase.auth.signInWithPassword`: os dois logins passaram.
@@ -117,7 +168,7 @@ O projeto não tinha env vars até 2026-07-08. Agora Production tem as duas `VIT
 
 ## Validações recentes
 
-- `npm run test`: 7 arquivos, 38 testes verdes.
+- `npm run test`: 6 arquivos, 35 testes verdes (queda de 38→35 é esperada: os 3 testes de `pagarme.ts` saíram junto com o arquivo removido).
 - `npm run build`: OK. Aviso de chunk grande do Vite é conhecido.
 - `https://guery-feiras.vercel.app/VendorPanel`: HTTP 200.
 - Login dos dois acessos criados: OK.
@@ -132,7 +183,14 @@ O projeto não tinha env vars até 2026-07-08. Agora Production tem as duas `VIT
 https://guery-feiras.vercel.app/**
 ```
 
-4. Próximas features ainda fora de escopo:
+4. **Stripe — fechar a integração real (prioridade):**
+   - Configurar `STRIPE_WEBHOOK_SECRET` (ver "Feito em 2026-07-15" acima) — sem isso o
+     pagamento fica sem confirmação automática.
+   - Testar ponta-a-ponta em produção com cartão de teste `4242 4242 4242 4242`.
+   - Terminar onboarding da conta Stripe (perfil do negócio + ToS) e reativar PIX quando
+     o usuário decidir.
+
+5. Próximas features ainda fora de escopo:
    - seção "Meus Créditos" em `/VendorPayments`
    - "usar crédito" no passo 3 da inscrição
    - combos

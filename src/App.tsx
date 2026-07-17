@@ -16,6 +16,8 @@ import RecuperarSenha from './pages/RecuperarSenha'
 import ChangePassword from './pages/ChangePassword'
 import CuradoriaCadastros from './pages/curadoria/CuradoriaCadastros'
 import CuradoriaInscricoes from './pages/curadoria/CuradoriaInscricoes'
+import CuradoriaFeiras from './pages/curadoria/CuradoriaFeiras'
+import CuradoriaFeiraDetalhe from './pages/curadoria/CuradoriaFeiraDetalhe'
 import CuradoriaIndicadores from './pages/curadoria/CuradoriaIndicadores'
 import CuradoriaSuporte from './pages/curadoria/CuradoriaSuporte'
 
@@ -46,6 +48,8 @@ function App() {
         <Route element={<AdminLayout />}>
           <Route path="/curadoria" element={<CuradoriaCadastros />} />
           <Route path="/curadoria/inscricoes" element={<CuradoriaInscricoes />} />
+          <Route path="/curadoria/feiras" element={<CuradoriaFeiras />} />
+          <Route path="/curadoria/feiras/:id" element={<CuradoriaFeiraDetalhe />} />
           <Route path="/curadoria/indicadores" element={<CuradoriaIndicadores />} />
           <Route path="/curadoria/suporte" element={<CuradoriaSuporte />} />
         </Route>

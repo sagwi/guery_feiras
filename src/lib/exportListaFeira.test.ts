@@ -8,12 +8,12 @@ import {
 
 const base: LinhaListaFeira[] = [
   { negocio: 'Zeta Café', comerciante: 'Ana', status: 'confirmado', telefone: '81 99999' },
-  { negocio: 'Alpha Burguer', comerciante: 'Breno', status: 'pendente' },
+  { negocio: 'Alpha Burguer', comerciante: 'Breno', status: 'reprovado' },
   { negocio: 'Beta Doces', comerciante: 'Carla', status: 'aprovado' },
 ]
 
 describe('exportListaFeira', () => {
-  it('filtra só status exportáveis (aprovado/confirmado/realizada)', () => {
+  it('filtra status exportáveis (exclui reprovado por padrão)', () => {
     const out = filtrarLinhasExportaveis(base)
     expect(out.map((l) => l.negocio)).toEqual(['Zeta Café', 'Beta Doces'])
   })

@@ -32,9 +32,11 @@ const linkAtivo = 'bg-white/10 text-marca-amarelo font-semibold'
 export default function Sidebar({
   collapsed,
   itens = itensVendor,
+  subtitle = 'PAINEL DO COMERCIANTE',
 }: {
   collapsed: boolean
   itens?: ItemMenu[]
+  subtitle?: string
 }) {
   const { signOut } = useAuth()
   const navigate = useNavigate()
@@ -47,14 +49,14 @@ export default function Sidebar({
   return (
     <aside className="flex h-screen flex-col bg-gradient-to-b from-marca-roxoDark to-marca-roxoDeep text-white">
       <div className="flex h-16 items-center gap-3 px-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-marca-amarelo to-marca-coral font-display text-lg font-bold text-marca-ink shadow-amber">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[15px] bg-gradient-to-br from-[#FB923C] to-[#F43F5E] font-display text-lg font-bold text-white shadow-amber">
           GF
         </div>
         {!collapsed && (
           <div className="leading-none">
             <div className="font-display text-base font-semibold">Guery Feiras</div>
-            <div className="mt-1 text-[11px] tracking-wide text-white/45">
-              PAINEL DO COMERCIANTE
+            <div className="mt-1 text-[10px] font-semibold tracking-[0.09em] text-[#8B7FB5]">
+              {subtitle}
             </div>
           </div>
         )}
@@ -65,7 +67,7 @@ export default function Sidebar({
           <NavLink
             key={to}
             to={to}
-            end
+            end={to !== '/curadoria/feiras'}
             className={({ isActive }) => `${linkBase} ${isActive ? linkAtivo : linkInativo}`}
           >
             <Icon className="h-5 w-5 shrink-0" strokeWidth={1.9} />

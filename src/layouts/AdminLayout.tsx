@@ -18,7 +18,7 @@ export default function AdminLayout() {
   return (
     <div className="flex h-screen overflow-hidden">
       <div className={collapsed ? 'w-16' : 'w-56'}>
-        <Sidebar collapsed={collapsed} itens={itensAdmin} />
+        <Sidebar collapsed={collapsed} itens={itensAdmin} subtitle="PAINEL DO CURADOR" />
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">

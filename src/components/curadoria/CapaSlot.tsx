@@ -70,7 +70,7 @@ export default function CapaSlot({
           <ImageIcon className="h-7 w-7 text-black/40" />
           <span className="max-w-[90%] text-[13px] font-medium text-black/55">{placeholder}</span>
           <span className="text-[11px] text-black/45">
-            ou <u className="underline-offset-2">browse files</u>
+            ou <u className="underline-offset-2">escolha um arquivo</u>
           </span>
         </button>
       )}

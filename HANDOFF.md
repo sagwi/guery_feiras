@@ -1,6 +1,6 @@
 # Guery Feiras - HANDOFF
 
-Atualizado em 2026-07-15.
+Atualizado em 2026-07-17.
 
 ## Estado atual
 
@@ -34,6 +34,15 @@ Regras antes de qualquer mudança:
 - `64ef06f`..`8949e1f` — CI no GitHub Actions (build + test com env placeholder, Node 24) +
   hardening de RLS/performance (migration `0009`) + `docs/runbook.md`.
 - CLAUDE.md do projeto criado/aprimorado (mapa de arquitetura, Edge Functions, DoD).
+
+## Feito em 2026-07-17
+
+- Redesign da curadoria (design handoff):
+  - **Cadastros** e **Inscrições** com cards inteligentes (hierarquia alinhada ao PropostaCard).
+  - Nova **Gestão de Feiras** (`/curadoria/feiras` + detalhe com abas Visão geral / Inscritos / Editar).
+  - Export PNG da lista de presença por data (`src/lib/exportListaFeira.ts`).
+  - Docs: `docs/design_handoff_curador_feiras/README.md`.
+  - Sem migration — usa `fairs`, `applications`, `profiles`, `parks`.
 
 ## Feito em 2026-07-15
 

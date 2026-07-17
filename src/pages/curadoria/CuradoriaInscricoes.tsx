@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Calendar, MapPin, Store } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { STATUS_LABELS, transicaoCuradoria, transicaoCancelamentoOrganizador, geraCreditoAoCancelar, type StatusInscricao } from '../../lib/statusInscricao'
+import {
+  STATUS_LABELS,
+  transicaoCuradoria,
+  transicaoCancelamentoOrganizador,
+  geraCreditoAoCancelar,
+  type StatusInscricao,
+} from '../../lib/statusInscricao'
+import { formatarDataBR, formatarMoeda, iniciais } from '../../lib/formatacao'
+import { curadoriaUi as ui } from '../../components/curadoria/curadoriaUi'
 
 type Inscricao = {
   id: string
@@ -12,26 +21,6 @@ type Inscricao = {
 }
 
 type Perfil = { id: string; nome: string | null; email: string | null }
-
-const card =
-  'animate-fadeUp space-y-3 rounded-card border border-marca-ink/[.07] bg-white p-5 shadow-card'
-const badge = 'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold'
-const botaoAprovar =
-  'rounded-xl bg-marca-acao px-4 py-2 text-sm font-bold text-white shadow-glow transition hover:-translate-y-0.5 hover:bg-marca-acaoHover disabled:opacity-50'
-const botaoReprovar =
-  'rounded-xl border border-marca-coral/50 px-4 py-2 text-sm font-semibold text-marca-coral transition hover:bg-marca-coral/5 disabled:opacity-50'
-const textarea =
-  'w-full rounded-xl border border-marca-ink/15 px-3.5 py-2.5 outline-none transition focus:border-marca-acao focus:ring-4 focus:ring-marca-acao/10'
-const erroClasse = 'text-sm text-marca-coral'
-
-function formatarDataBR(iso: string): string {
-  const [y, m, d] = iso.split('-')
-  return `${d}/${m}/${y}`
-}
-
-function formatarMoeda(v: number): string {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
 
 export default function CuradoriaInscricoes() {
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([])
@@ -88,7 +77,9 @@ export default function CuradoriaInscricoes() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { carregar() }, [carregar])
+  useEffect(() => {
+    carregar()
+  }, [carregar])
 
   async function decidir(inscricao: Inscricao, decisao: 'aprovar' | 'reprovar', motivoReprovacao?: string) {
     setErro(null)
@@ -132,7 +123,6 @@ export default function CuradoriaInscricoes() {
       return
     }
 
-    // Crédito só se a data estava paga (confirmada): valor exato do pagamento confirmado.
     if (geraCreditoAoCancelar(inscricao.status)) {
       const { data: pags } = await supabase
         .from('payments')
@@ -164,49 +154,70 @@ export default function CuradoriaInscricoes() {
     setProcessandoId(null)
   }
 
-  if (loading) return <p className="text-sm text-marca-ink/60">Carregando…</p>
+  function CardInscricao({
+    i,
+    acoes,
+  }: {
+    i: Inscricao
+    acoes: 'curar' | 'cancelar'
+  }) {
+    const statusInfo = STATUS_LABELS[i.status]
+    const perfil = perfis[i.user_id]
+    const nome = perfil?.nome ?? perfil?.email ?? i.user_id
 
-  return (
-    <div className="space-y-4">
-      <h2 className="font-display text-xl font-bold text-marca-ink">Inscrições pendentes</h2>
-
-      {erro && <p className={erroClasse}>{erro}</p>}
-
-      {inscricoes.length === 0 && (
-        <p className="py-6 text-center text-sm text-marca-ink/60">Nenhuma inscrição pendente.</p>
-      )}
-
-      <div className="space-y-3">
-        {inscricoes.map((i) => {
-          const statusInfo = STATUS_LABELS[i.status]
-          const perfil = perfis[i.user_id]
-          return (
-            <div key={i.id} className={card}>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-display font-semibold text-marca-ink">{i.fairs?.nome ?? '—'}</p>
-                <span className={`${badge} ${statusInfo.cor}`}>{statusInfo.label}</span>
+    return (
+      <article className={ui.card}>
+        <div className="flex">
+          <div className="flex w-[110px] shrink-0 items-end bg-gradient-to-br from-marca-acao to-marca-roxoDark p-3 [background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.06)_0_8px,transparent_8px_16px),linear-gradient(135deg,#6D28D9,#2A1060)]">
+            <Store className="h-6 w-6 text-white/40" />
+          </div>
+          <div className="min-w-0 flex-1 space-y-3 p-5">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="font-display text-[17px] font-semibold text-marca-ink">
+                  {i.fairs?.nome ?? '—'}
+                </h3>
+                <p className="mt-0.5 inline-flex items-center gap-1.5 text-[13.5px] text-marca-ink/60">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {i.fairs?.parks?.nome ?? '—'}
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-sm text-marca-ink md:grid-cols-4">
-                <div><span className="text-marca-ink/50">Parque:</span> {i.fairs?.parks?.nome ?? '—'}</div>
-                <div><span className="text-marca-ink/50">Negócio:</span> {i.businesses?.nome ?? '—'}</div>
-                <div><span className="text-marca-ink/50">Inscrito:</span> {perfil?.nome ?? perfil?.email ?? i.user_id}</div>
-                <div><span className="text-marca-ink/50">Data:</span> {formatarDataBR(i.data_escolhida)}</div>
-                {i.fairs && <div><span className="text-marca-ink/50">Taxa:</span> {formatarMoeda(i.fairs.taxa)}</div>}
-              </div>
+              <span className={`${ui.badge} ${statusInfo.cor}`}>{statusInfo.label}</span>
+            </div>
 
-              {reprovandoId === i.id ? (
-                <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2 text-[13px] text-marca-ink/70">
+              <span className={ui.chip}>{i.businesses?.nome ?? '—'}</span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-marca-ink/5 text-[10px] font-bold text-marca-ink">
+                  {iniciais(nome)}
+                </span>
+                {nome}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5" />
+                {formatarDataBR(i.data_escolhida)}
+              </span>
+              {i.fairs && (
+                <span>
+                  Taxa: <strong className="text-marca-ink">{formatarMoeda(i.fairs.taxa)}</strong>
+                </span>
+              )}
+            </div>
+
+            {acoes === 'curar' &&
+              (reprovandoId === i.id ? (
+                <div className="space-y-2 border-t border-marca-ink/[.06] pt-3">
                   <textarea
-                    className={textarea}
+                    className={ui.textarea}
                     rows={2}
                     placeholder="Motivo da reprovação"
                     value={motivo}
                     onChange={(e) => setMotivo(e.target.value)}
                   />
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      className={botaoReprovar}
+                      className={ui.botaoReprovar}
                       disabled={!motivo.trim() || processandoId === i.id}
                       onClick={() => decidir(i, 'reprovar', motivo)}
                     >
@@ -215,17 +226,20 @@ export default function CuradoriaInscricoes() {
                     <button
                       type="button"
                       className="text-sm font-semibold text-marca-ink/60 hover:text-marca-ink"
-                      onClick={() => { setReprovandoId(null); setMotivo('') }}
+                      onClick={() => {
+                        setReprovandoId(null)
+                        setMotivo('')
+                      }}
                     >
                       Cancelar
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 border-t border-marca-ink/[.06] pt-3">
                   <button
                     type="button"
-                    className={botaoAprovar}
+                    className={ui.botaoAprovar}
                     disabled={processandoId === i.id}
                     onClick={() => decidir(i, 'aprovar')}
                   >
@@ -233,53 +247,69 @@ export default function CuradoriaInscricoes() {
                   </button>
                   <button
                     type="button"
-                    className={botaoReprovar}
+                    className={ui.botaoReprovar}
                     disabled={processandoId === i.id}
                     onClick={() => setReprovandoId(i.id)}
                   >
                     Reprovar
                   </button>
                 </div>
-              )}
-            </div>
-          )
-        })}
+              ))}
+
+            {acoes === 'cancelar' && (
+              <div className="border-t border-marca-ink/[.06] pt-3">
+                <button
+                  type="button"
+                  className={ui.botaoReprovar}
+                  disabled={processandoId === i.id}
+                  onClick={() => cancelarPeloOrganizador(i)}
+                >
+                  {processandoId === i.id ? 'Cancelando...' : 'Cancelar data'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </article>
+    )
+  }
+
+  if (loading) return <p className="text-sm text-marca-ink/60">Carregando…</p>
+
+  return (
+    <div className={ui.page}>
+      <div>
+        <h2 className={ui.titulo}>Inscrições pendentes</h2>
+        <p className={ui.subtitulo}>
+          {inscricoes.length === 0
+            ? 'Nenhuma inscrição aguardando curadoria.'
+            : `${inscricoes.length} inscrição${inscricoes.length === 1 ? '' : 'ões'} na fila.`}
+        </p>
       </div>
 
-      <h2 className="pt-4 font-display text-xl font-bold text-marca-ink">Datas ativas</h2>
-      <p className="text-sm text-marca-ink/60">Cancelar uma data já paga gera crédito automático na carteira do comerciante.</p>
+      {erro && <p className={ui.erro}>{erro}</p>}
 
-      {ativas.length === 0 && (
-        <p className="py-6 text-center text-sm text-marca-ink/60">Nenhuma data ativa.</p>
-      )}
+      {inscricoes.length === 0 && <p className={ui.empty}>Nenhuma inscrição pendente.</p>}
 
       <div className="space-y-3">
-        {ativas.map((i) => {
-          const statusInfo = STATUS_LABELS[i.status]
-          const perfil = perfis[i.user_id]
-          return (
-            <div key={i.id} className={card}>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-display font-semibold text-marca-ink">{i.fairs?.nome ?? '—'}</p>
-                <span className={`${badge} ${statusInfo.cor}`}>{statusInfo.label}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-sm text-marca-ink md:grid-cols-4">
-                <div><span className="text-marca-ink/50">Parque:</span> {i.fairs?.parks?.nome ?? '—'}</div>
-                <div><span className="text-marca-ink/50">Inscrito:</span> {perfil?.nome ?? perfil?.email ?? i.user_id}</div>
-                <div><span className="text-marca-ink/50">Data:</span> {formatarDataBR(i.data_escolhida)}</div>
-                {i.fairs && <div><span className="text-marca-ink/50">Taxa:</span> {formatarMoeda(i.fairs.taxa)}</div>}
-              </div>
-              <button
-                type="button"
-                className={botaoReprovar}
-                disabled={processandoId === i.id}
-                onClick={() => cancelarPeloOrganizador(i)}
-              >
-                {processandoId === i.id ? 'Cancelando...' : 'Cancelar data'}
-              </button>
-            </div>
-          )
-        })}
+        {inscricoes.map((i) => (
+          <CardInscricao key={i.id} i={i} acoes="curar" />
+        ))}
+      </div>
+
+      <div className="pt-2">
+        <h2 className={ui.titulo}>Datas ativas</h2>
+        <p className={ui.subtitulo}>
+          Cancelar uma data já paga gera crédito automático na carteira do comerciante.
+        </p>
+      </div>
+
+      {ativas.length === 0 && <p className={ui.empty}>Nenhuma data ativa.</p>}
+
+      <div className="space-y-3">
+        {ativas.map((i) => (
+          <CardInscricao key={i.id} i={i} acoes="cancelar" />
+        ))}
       </div>
     </div>
   )

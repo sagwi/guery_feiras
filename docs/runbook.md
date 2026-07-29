@@ -38,10 +38,15 @@ npm run dev &      # se ainda não tiver um servidor local rodando em :5173
 npm run test:e2e
 ```
 
-Contas usadas: `curadoria.demo@gueryfeiras.dev` e `nathan.cruz@demo.gueryfeiras.dev` (senha
-`Demo@123` nas duas) — são contas de demonstração, seguras para reuso repetido.
+Contas usadas no E2E Playwright: `curadoria.demo@gueryfeiras.dev` e
+`nathan.cruz@demo.gueryfeiras.dev` (senha `Demo@123` nas duas).
 
-## Contas de referência
+## Contas de referência (demo produto)
 
-- Curador (demo): `curadoria.demo@gueryfeiras.dev` / `Demo@123`
-- Ver `HANDOFF.md` para contas reais e regras de segurança do banco compartilhado.
+Senha das duas (desde 2026-07-29): **`GueryFeiras#26`**
+
+- Comerciante: `demo.comerciante@guery.app`
+- Curadoria: `demo.curadoria@guery.app`
+
+E2E (Playwright, contas `.gueryfeiras.dev`): ver acima — senha ainda `Demo@123`.
+Ver `HANDOFF.md` para contas reais e regras de segurança do banco compartilhado.

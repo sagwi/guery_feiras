@@ -1,6 +1,6 @@
 # Guery Feiras - HANDOFF
 
-Atualizado em 2026-07-17 (hifi curadoria).
+Atualizado em 2026-07-29 (rotação senha demos guery.app).
 
 ## Estado atual
 
@@ -128,6 +128,15 @@ Depois disso foi feito deploy de produção. O bundle atual publicado contém a 
 
 Criados diretamente no Auth do Supabase `pyyyrzwdidcronhidkwb`, com autorização explícita do usuário.
 
+### Contas demo (visão do produto)
+
+Senha das duas (rotacionada em 2026-07-29; `Demo@2026` inválida): **`GueryFeiras#26`**
+
+- `demo.comerciante@guery.app` — visão do comerciante (`gf_admin` ausente)
+- `demo.curadoria@guery.app` — visão da curadoria (`gf_admin`: true)
+
+### Outros acessos
+
 - `brenooliver@outlook.com`
   - Tipo: admin/curadoria
   - `email_confirmado`: true
@@ -146,9 +155,7 @@ Criados diretamente no Auth do Supabase `pyyyrzwdidcronhidkwb`, com autorizaçã
   - Tem inscrição **aprovada** em "Feira de Sábado da Jaqueira" (R$ 200) — pronta pra testar o Checkout da Stripe
   - `gf_admin`: false
 
-Senha temporária não foi gravada neste arquivo. Consultar a conversa atual se ainda necessário e trocar a senha depois do primeiro acesso.
-
-Validação feita via `supabase.auth.signInWithPassword`: os dois logins passaram.
+Validação 2026-07-29: login com `GueryFeiras#26` OK nas duas demos; senha antiga rejeitada.
 
 ## MCP Supabase
 
@@ -185,21 +192,20 @@ O projeto não tinha env vars até 2026-07-08. Agora Production tem as duas `VIT
 ## Próximos passos recomendados
 
 1. Abrir `https://guery-feiras.vercel.app/login` em aba anônima ou hard refresh.
-2. Trocar as senhas temporárias.
-3. Se o e-mail de confirmação voltar a ser usado, adicionar no Supabase Auth, sem trocar `Site URL` global:
+2. Se o e-mail de confirmação voltar a ser usado, adicionar no Supabase Auth, sem trocar `Site URL` global:
 
 ```txt
 https://guery-feiras.vercel.app/**
 ```
 
-4. **Stripe — fechar a integração real (prioridade):**
+3. **Stripe — fechar a integração real (prioridade):**
    - Configurar `STRIPE_WEBHOOK_SECRET` (ver "Feito em 2026-07-15" acima) — sem isso o
      pagamento fica sem confirmação automática.
    - Testar ponta-a-ponta em produção com cartão de teste `4242 4242 4242 4242`.
    - Terminar onboarding da conta Stripe (perfil do negócio + ToS) e reativar PIX quando
      o usuário decidir.
 
-5. Próximas features ainda fora de escopo:
+4. Próximas features ainda fora de escopo:
    - seção "Meus Créditos" em `/VendorPayments`
    - "usar crédito" no passo 3 da inscrição
    - combos

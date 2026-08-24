@@ -14,17 +14,17 @@ export default function AuthLayout() {
         </div>
         <div className="relative">
           <h2 className="font-display text-4xl font-bold leading-tight">
-            Sua marca em todas as feiras da cidade.
+            Sua marca nas feiras do Guery Feiras
           </h2>
           <p className="mt-3 max-w-sm text-white/80">
-            Inscreva-se, pague com PIX ou crédito e acompanhe suas participações — tudo num painel
-            só.
+            Cadastro com curadoria, inscrição por data, pagamento digital e carteira de crédito —
+            no mesmo painel do expositor.
           </p>
         </div>
-        <div className="relative flex gap-5 text-sm text-white/75">
-          <span>🎪 +120 feiras</span>
-          <span>🛍️ multimarca</span>
-          <span>⚡ PIX em tempo real</span>
+        <div className="relative flex flex-wrap gap-5 text-sm text-white/75">
+          <span>Cadastro e curadoria</span>
+          <span>Inscrições por data</span>
+          <span>Pagamento digital</span>
         </div>
       </div>
 

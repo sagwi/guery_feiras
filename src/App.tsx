@@ -20,6 +20,9 @@ import CuradoriaFeiras from './pages/curadoria/CuradoriaFeiras'
 import CuradoriaFeiraDetalhe from './pages/curadoria/CuradoriaFeiraDetalhe'
 import CuradoriaIndicadores from './pages/curadoria/CuradoriaIndicadores'
 import CuradoriaSuporte from './pages/curadoria/CuradoriaSuporte'
+import CuradoriaAvisos from './pages/curadoria/CuradoriaAvisos'
+import CuradoriaDefinicoes from './pages/curadoria/CuradoriaDefinicoes'
+import VendorReacao from './pages/VendorReacao'
 
 function App() {
   return (
@@ -41,6 +44,7 @@ function App() {
           <Route path="/VendorWallet" element={<VendorWallet />} />
           <Route path="/ChangePassword" element={<ChangePassword />} />
           <Route path="/VendorManual" element={<Placeholder titulo="Manual" />} />
+          <Route path="/VendorReacao/:applicationId" element={<VendorReacao />} />
         </Route>
       </Route>
 
@@ -50,8 +54,10 @@ function App() {
           <Route path="/curadoria/inscricoes" element={<CuradoriaInscricoes />} />
           <Route path="/curadoria/feiras" element={<CuradoriaFeiras />} />
           <Route path="/curadoria/feiras/:id" element={<CuradoriaFeiraDetalhe />} />
+          <Route path="/curadoria/avisos" element={<CuradoriaAvisos />} />
           <Route path="/curadoria/indicadores" element={<CuradoriaIndicadores />} />
           <Route path="/curadoria/suporte" element={<CuradoriaSuporte />} />
+          <Route path="/curadoria/definicoes" element={<CuradoriaDefinicoes />} />
         </Route>
       </Route>
 

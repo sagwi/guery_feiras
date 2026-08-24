@@ -4,10 +4,15 @@ Complementa o CLAUDE.md global do Breno. Em conflito, este arquivo (projeto) ven
 
 ## O que é este projeto
 
+**Repositório de demonstração** do produto de gestão de feiras (expositor + curadoria),
+com branding **Guery Feiras** e dados de exemplo. A produção do cliente Vamô! Mercado
+Criativo (`vamomercadocriativo.com.br`, schema/infra separados) **não** deve ser
+alterada a partir deste repo.
+
 Marketplace de feiras de rua/parques: comerciante se cadastra, passa por curadoria,
 se inscreve em datas de feira, paga (Stripe Checkout) e gerencia carteira de crédito.
 Dois papéis: **comerciante** (rotas `/Vendor*`) e **curador/admin** (rotas `/curadoria`,
-flag `gf_admin`). Produção real com usuários reais: https://guery-feiras.vercel.app
+flag `gf_admin`). Demo deploy: https://guery-feiras.vercel.app
 
 - Especificação do produto: `vivafeiras-vendorpanel-specs.md` (as "§" nos comentários referem-se a ela)
 - Estado atual + contas de acesso: `HANDOFF.md`

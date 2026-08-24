@@ -33,10 +33,12 @@ export default function Sidebar({
   collapsed,
   itens = itensVendor,
   subtitle = 'PAINEL DO COMERCIANTE',
+  onNavigate,
 }: {
   collapsed: boolean
   itens?: ItemMenu[]
   subtitle?: string
+  onNavigate?: () => void
 }) {
   const { signOut } = useAuth()
   const navigate = useNavigate()
@@ -47,7 +49,7 @@ export default function Sidebar({
   }
 
   return (
-    <aside className="flex h-screen flex-col bg-gradient-to-b from-marca-roxoDark to-marca-roxoDeep text-white">
+    <aside className="flex h-full flex-col bg-gradient-to-b from-marca-roxoDark to-marca-roxoDeep text-white">
       <div className="flex h-16 items-center gap-3 px-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[15px] bg-gradient-to-br from-[#FB923C] to-[#F43F5E] font-display text-lg font-bold text-white shadow-amber">
           GF
@@ -68,6 +70,7 @@ export default function Sidebar({
             key={to}
             to={to}
             end={to !== '/curadoria/feiras'}
+            onClick={onNavigate}
             className={({ isActive }) => `${linkBase} ${isActive ? linkAtivo : linkInativo}`}
           >
             <Icon className="h-5 w-5 shrink-0" strokeWidth={1.9} />

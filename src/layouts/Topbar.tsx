@@ -1,4 +1,4 @@
-import { PanelLeft } from 'lucide-react'
+import { PanelLeft, Menu } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import NotificacoesDropdown from '../components/NotificacoesDropdown'
 
@@ -13,10 +13,12 @@ function iniciais(nome?: string | null, fallback = 'GF'): string {
 export default function Topbar({
   collapsed,
   onToggleCollapsed,
+  onOpenMobile,
   role = 'Comerciante',
 }: {
   collapsed: boolean
   onToggleCollapsed: () => void
+  onOpenMobile?: () => void
   role?: string
 }) {
   const { profile } = useAuth()
@@ -24,14 +26,26 @@ export default function Topbar({
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-marca-ink/[.07] bg-white/80 px-5 backdrop-blur">
-      <button
-        type="button"
-        onClick={onToggleCollapsed}
-        aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
-        className="rounded-xl p-2 text-marca-ink/55 transition-colors hover:bg-marca-ink/5 hover:text-marca-ink"
-      >
-        <PanelLeft className="h-5 w-5" />
-      </button>
+      <div className="flex items-center gap-1">
+        {onOpenMobile && (
+          <button
+            type="button"
+            onClick={onOpenMobile}
+            aria-label="Abrir menu"
+            className="rounded-xl p-2 text-marca-ink/55 transition-colors hover:bg-marca-ink/5 hover:text-marca-ink md:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onToggleCollapsed}
+          aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+          className="hidden rounded-xl p-2 text-marca-ink/55 transition-colors hover:bg-marca-ink/5 hover:text-marca-ink md:inline-flex"
+        >
+          <PanelLeft className="h-5 w-5" />
+        </button>
+      </div>
 
       <div className="flex items-center gap-4">
         <NotificacoesDropdown />

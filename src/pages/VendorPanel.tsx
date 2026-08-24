@@ -8,22 +8,39 @@ import {
   CalendarCheck,
   Plus,
   Sparkles,
+  Heart,
+  Star,
 } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
 import { completarOnboarding } from '../lib/completarOnboarding'
+import { sortAvisos } from '../lib/avisos'
+import { podeAvaliar } from '../lib/reacoesFeira'
 import KpiCard from '../components/KpiCard'
 import CuradoriaBanner from '../components/CuradoriaBanner'
 import PropostaCard from '../components/PropostaCard'
 import type { Proposta } from '../components/PropostaCard'
+import AvisoFeedCard, { avisoFeedRowClass } from '../components/AvisoFeedCard'
 
 const tabTrigger =
   'px-4 py-2.5 text-sm font-semibold text-marca-ink/50 border-b-2 border-transparent transition-colors hover:text-marca-ink data-[state=active]:border-marca-acao data-[state=active]:text-marca-acao'
+
+type Aviso = {
+  id: string
+  titulo: string
+  corpo: string
+  imagem_url: string | null
+  fixo: boolean
+  criado_em: string
+}
 
 export default function VendorPanel() {
   const { user, profile } = useAuth()
   const [propostas, setPropostas] = useState<Proposta[]>([])
   const [loadingPropostas, setLoadingPropostas] = useState(true)
+  const [avisos, setAvisos] = useState<Aviso[]>([])
+  const [meusLikes, setMeusLikes] = useState<Set<string>>(new Set())
+  const [jaAvaliou, setJaAvaliou] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (user?.id) {
@@ -34,11 +51,14 @@ export default function VendorPanel() {
   const carregarPropostas = useCallback(async () => {
     if (!user?.id) return
     setLoadingPropostas(true)
-    const { data, error } = await supabase
-      .from('applications')
-      .select('*, fairs(nome,local,imagem_url,taxa,parks(nome)), businesses(nome)')
-      .eq('user_id', user.id)
-      .order('criado_em', { ascending: false })
+    const [{ data, error }, reac] = await Promise.all([
+      supabase
+        .from('applications')
+        .select('*, fairs(nome,local,imagem_url,taxa,parks(nome)), businesses(nome)')
+        .eq('user_id', user.id)
+        .order('criado_em', { ascending: false }),
+      supabase.from('reacoes_feira').select('application_id').eq('user_id', user.id),
+    ])
     if (error) {
       console.error('VendorPanel: falha ao carregar propostas', error)
       setPropostas([])
@@ -46,17 +66,72 @@ export default function VendorPanel() {
       return
     }
     setPropostas((data ?? []) as Proposta[])
+    setJaAvaliou(new Set((reac.data ?? []).map((r) => r.application_id as string)))
     setLoadingPropostas(false)
+  }, [user?.id])
+
+  const carregarAvisos = useCallback(async () => {
+    if (!user?.id) return
+    const { data, error } = await supabase
+      .from('avisos')
+      .select('id,titulo,corpo,imagem_url,fixo,criado_em')
+      .order('fixo', { ascending: false })
+      .order('criado_em', { ascending: false })
+    if (error) {
+      console.error('VendorPanel: falha ao carregar avisos', error)
+      return
+    }
+    const lista = sortAvisos((data ?? []) as Aviso[])
+    setAvisos(lista)
+    const ids = lista.map((a) => a.id)
+    if (ids.length === 0) {
+      setMeusLikes(new Set())
+      return
+    }
+    const { data: likes } = await supabase
+      .from('aviso_reacoes')
+      .select('aviso_id')
+      .eq('user_id', user.id)
+      .in('aviso_id', ids)
+    setMeusLikes(new Set((likes ?? []).map((l) => l.aviso_id as string)))
   }, [user?.id])
 
   useEffect(() => {
     carregarPropostas()
-  }, [carregarPropostas])
+    carregarAvisos()
+  }, [carregarPropostas, carregarAvisos])
+
+  async function toggleLike(avisoId: string) {
+    if (!user?.id) return
+    const liked = meusLikes.has(avisoId)
+    if (liked) {
+      await supabase
+        .from('aviso_reacoes')
+        .delete()
+        .eq('aviso_id', avisoId)
+        .eq('user_id', user.id)
+      setMeusLikes((s) => {
+        const n = new Set(s)
+        n.delete(avisoId)
+        return n
+      })
+    } else {
+      await supabase.from('aviso_reacoes').insert({ aviso_id: avisoId, user_id: user.id })
+      setMeusLikes((s) => new Set(s).add(avisoId))
+    }
+  }
 
   // ponytail: participação real (check-in) ainda não existe — Participações deriva do status 'realizada'.
   const pendencias = propostas.filter((p) => p.status === 'aprovado').length
   const contratosAtivos = propostas.filter((p) => p.status === 'confirmado').length
   const participacoes = propostas.filter((p) => p.status === 'realizada').length
+  const paraAvaliar = propostas.filter((p) =>
+    podeAvaliar({
+      status: p.status,
+      data_escolhida: p.data_escolhida,
+      jaAvaliou: jaAvaliou.has(p.id),
+    }),
+  )
 
   return (
     <div className="space-y-6">
@@ -68,12 +143,47 @@ export default function VendorPanel() {
               <Sparkles className="h-3.5 w-3.5" /> Curadoria aprovada
             </div>
           )}
-          <h1 className="font-display text-[28px] font-semibold">Olá, {profile?.nome ?? ''}! 👋</h1>
+          <h1 className="font-display text-[28px] font-semibold">Olá, {profile?.nome ?? ''}!</h1>
           <p className="mt-0.5 text-white/80">Gerencie suas inscrições e participações nas feiras.</p>
         </div>
       </div>
 
       {profile?.curadoria_status === 'pendente' && <CuradoriaBanner />}
+
+      {avisos.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="font-display text-lg font-semibold text-marca-ink">Avisos</h2>
+          <div className={avisoFeedRowClass}>
+            {avisos.map((a) => (
+              <AvisoFeedCard
+                key={a.id}
+                titulo={a.titulo}
+                corpo={a.corpo}
+                imagem_url={a.imagem_url}
+                fixo={a.fixo}
+                criado_em={a.criado_em}
+                footer={
+                  <button
+                    type="button"
+                    onClick={() => toggleLike(a.id)}
+                    className={`inline-flex items-center gap-0.5 rounded-lg p-1.5 text-[10px] font-semibold transition ${
+                      meusLikes.has(a.id)
+                        ? 'text-marca-coral'
+                        : 'text-marca-ink/50 hover:text-marca-acao'
+                    }`}
+                    aria-label={meusLikes.has(a.id) ? 'Remover curtida' : 'Curtir'}
+                  >
+                    <Heart
+                      className="h-3.5 w-3.5"
+                      fill={meusLikes.has(a.id) ? 'currentColor' : 'none'}
+                    />
+                  </button>
+                }
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <KpiCard label="Contratos ativos" valor={contratosAtivos} icon={FileCheck} tone="roxo" />
@@ -81,6 +191,29 @@ export default function VendorPanel() {
         <KpiCard label="Pendências" valor={pendencias} icon={AlertTriangle} tone="amarelo" hint="a pagar" />
         <KpiCard label="Participações" valor={participacoes} icon={CalendarCheck} tone="coral" />
       </div>
+
+      {paraAvaliar.length > 0 && (
+        <section className="space-y-2 rounded-card border border-marca-ink/[.07] bg-white p-4 shadow-card">
+          <h2 className="font-display text-base font-semibold text-marca-ink">
+            Avalie suas feiras
+          </h2>
+          <ul className="space-y-2">
+            {paraAvaliar.map((p) => (
+              <li key={p.id} className="flex items-center justify-between gap-3 text-sm">
+                <span className="text-marca-ink/80">
+                  {(p.fairs as { nome?: string } | null)?.nome ?? 'Feira'} · {p.data_escolhida}
+                </span>
+                <Link
+                  to={`/VendorReacao/${p.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-marca-acao px-3 py-1.5 text-xs font-bold text-white"
+                >
+                  <Star className="h-3.5 w-3.5" /> Reagir
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <Tabs.Root defaultValue="propostas">
         <div className="flex items-center justify-between border-b border-marca-ink/10">
@@ -111,7 +244,9 @@ export default function VendorPanel() {
           </div>
         </Tabs.Content>
         <Tabs.Content value="participacoes" className="py-6 text-center text-sm text-marca-ink/60">
-          Nenhuma participação registrada.
+          {participacoes === 0
+            ? 'Nenhuma participação registrada.'
+            : `${participacoes} participação(ões) marcada(s) como realizada.`}
         </Tabs.Content>
       </Tabs.Root>
     </div>

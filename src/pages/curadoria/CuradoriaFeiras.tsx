@@ -7,6 +7,7 @@ import { curadoriaUi as ui, statusBadge } from '../../components/curadoria/curad
 import { BarraBusca, Segmented } from '../../components/curadoria/CuradoriaToolbar'
 import CapaSlot from '../../components/curadoria/CapaSlot'
 import CuradoriaToast from '../../components/curadoria/CuradoriaToast'
+import { novaPergunta, sanitizarPerguntas, validarPerguntas, type PerguntaFeira } from '../../lib/perguntasFeira'
 
 export type FairStatus = 'aberto' | 'rascunho' | 'encerrada' | 'inativo'
 
@@ -70,10 +71,13 @@ export default function CuradoriaFeiras() {
     descricao: '',
     imagem_url: null as string | null,
   })
+  const [catalogoSegmentos, setCatalogoSegmentos] = useState<{ id: string; nome: string }[]>([])
+  const [segmentoIds, setSegmentoIds] = useState<string[]>([])
+  const [perguntas, setPerguntas] = useState<PerguntaFeira[]>([])
 
   const carregar = useCallback(async () => {
     setLoading(true)
-    const [feirasRes, parksRes, appsRes] = await Promise.all([
+    const [feirasRes, parksRes, appsRes, segRes] = await Promise.all([
       supabase
         .from('fairs')
         .select(
@@ -82,6 +86,7 @@ export default function CuradoriaFeiras() {
         .order('nome'),
       supabase.from('parks').select('id,nome').order('nome'),
       supabase.from('applications').select('fair_id,status'),
+      supabase.from('segmentos').select('id,nome').eq('ativo', true).order('nome'),
     ])
     if (feirasRes.error) {
       console.error('CuradoriaFeiras:', feirasRes.error)
@@ -91,6 +96,7 @@ export default function CuradoriaFeiras() {
     }
     setFeiras((feirasRes.data ?? []) as unknown as Fair[])
     setParks((parksRes.data ?? []) as { id: string; nome: string }[])
+    setCatalogoSegmentos((segRes.data ?? []) as { id: string; nome: string }[])
     setForm((f) =>
       f.park_id || !parksRes.data?.[0]
         ? f
@@ -133,6 +139,12 @@ export default function CuradoriaFeiras() {
       setErro('Nome e parque são obrigatórios.')
       return
     }
+    const listaPerguntas = sanitizarPerguntas(perguntas)
+    const perguntaErro = validarPerguntas(listaPerguntas)
+    if (perguntaErro) {
+      setErro(perguntaErro)
+      return
+    }
     setSalvando(true)
     setErro(null)
     const data = form.data || new Date().toISOString().slice(0, 10)
@@ -153,14 +165,26 @@ export default function CuradoriaFeiras() {
       data_fim: data,
       horario: form.horario.trim() || null,
       categorias: cats,
+      perguntas: listaPerguntas,
       status: modo === 'publicar' ? 'aberto' : 'rascunho',
     }
     const { data: row, error } = await supabase.from('fairs').insert(payload).select('id').single()
-    setSalvando(false)
     if (error || !row) {
+      setSalvando(false)
       setErro('Falha ao criar feira: ' + (error?.message ?? 'desconhecido'))
       return
     }
+    if (segmentoIds.length > 0) {
+      const { error: segErr } = await supabase.from('fair_segmentos').insert(
+        segmentoIds.map((segmento_id) => ({ fair_id: row.id, segmento_id })),
+      )
+      if (segErr) {
+        setSalvando(false)
+        setErro('Feira criada, mas falhou ao vincular segmentos: ' + segErr.message)
+        return
+      }
+    }
+    setSalvando(false)
     setCreateOpen(false)
     setToast(modo === 'publicar' ? 'Feira publicada' : 'Rascunho salvo')
     navigate(`/curadoria/feiras/${row.id}`)
@@ -393,6 +417,66 @@ export default function CuradoriaFeiras() {
                   value={form.descricao}
                   onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))}
                 />
+              </div>
+              <div className="md:col-span-2">
+                <label className={ui.label}>Segmentos permitidos (vazio = todos)</label>
+                <div className="flex flex-wrap gap-2">
+                  {catalogoSegmentos.map((s) => {
+                    const on = segmentoIds.includes(s.id)
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() =>
+                          setSegmentoIds((ids) =>
+                            on ? ids.filter((id) => id !== s.id) : [...ids, s.id],
+                          )
+                        }
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                          on ? 'bg-marca-acao text-white' : 'bg-marca-ink/10 text-marca-ink/70'
+                        }`}
+                      >
+                        {s.nome}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              <div className="md:col-span-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className={ui.label}>Perguntas da inscrição (máx. 10)</label>
+                  <button
+                    type="button"
+                    className="text-sm font-semibold text-marca-acao"
+                    onClick={() =>
+                      setPerguntas((ps) => (ps.length >= 10 ? ps : [...ps, novaPergunta()]))
+                    }
+                  >
+                    + Pergunta
+                  </button>
+                </div>
+                {perguntas.map((p, i) => (
+                  <div key={p.id} className="flex gap-2">
+                    <input
+                      className={ui.input}
+                      placeholder={`Pergunta ${i + 1}`}
+                      value={p.rotulo}
+                      onChange={(e) =>
+                        setPerguntas((ps) =>
+                          ps.map((x) => (x.id === p.id ? { ...x, rotulo: e.target.value } : x)),
+                        )
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="text-marca-ink/40 hover:text-marca-coral"
+                      aria-label="Remover pergunta"
+                      onClick={() => setPerguntas((ps) => ps.filter((x) => x.id !== p.id))}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
             <div className={ui.modalFooter}>

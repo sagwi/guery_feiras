@@ -14,7 +14,7 @@ export default function AuthLayout() {
         </div>
         <div className="relative">
           <h2 className="font-display text-4xl font-bold leading-tight">
-            Sua marca nas feiras do Guery Feiras
+            Sua marca em todas as feiras da cidade.
           </h2>
           <p className="mt-3 max-w-sm text-white/80">
             Cadastro com curadoria, inscrição por data, pagamento digital e carteira de crédito —

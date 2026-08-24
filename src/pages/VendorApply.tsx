@@ -7,11 +7,14 @@ import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
 import { datasDisponiveis } from '../lib/datasFeira'
 import NegocioForm from '../components/NegocioForm'
+import { sanitizarPerguntas, montarRespostas, type PerguntaFeira } from '../lib/perguntasFeira'
+import { feiraAceitaSegmento } from '../lib/fairSegmentos'
 
 type Business = {
   id: string
   nome: string
   segmento: string
+  segmento_id: string | null
   imagem_url: string | null
 }
 
@@ -24,6 +27,7 @@ type Fair = {
   dias_semana: number[]
   data_inicio: string
   data_fim: string
+  perguntas?: PerguntaFeira[] | null
   parks: { nome: string } | null
 }
 
@@ -75,6 +79,7 @@ export default function VendorApply() {
   const [fairs, setFairs] = useState<Fair[]>([])
   const [loadingFairs, setLoadingFairs] = useState(true)
   const [fairIdsInscritos, setFairIdsInscritos] = useState<Set<string>>(new Set())
+  const [segmentosPorFeira, setSegmentosPorFeira] = useState<Record<string, string[]>>({})
   const [selectedFairId, setSelectedFairId] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState('')
 
@@ -83,12 +88,13 @@ export default function VendorApply() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [enviado, setEnviado] = useState(false)
+  const [respostas, setRespostas] = useState<Record<string, string>>({})
 
   const carregarBusinesses = useCallback(async (): Promise<Business[]> => {
     if (!user?.id) return []
     const { data, error } = await supabase
       .from('businesses')
-      .select('id,nome,segmento,imagem_url')
+      .select('id,nome,segmento,segmento_id,imagem_url')
       .eq('user_id', user.id)
       .order('criado_em')
     if (error) { console.error('VendorApply: falha ao carregar negócios', error); return [] }
@@ -113,15 +119,25 @@ export default function VendorApply() {
     Promise.all([
       supabase.from('fairs').select('*, parks(nome)').eq('status', 'aberto').order('nome'),
       supabase.from('applications').select('fair_id,status').eq('user_id', user.id),
-    ]).then(([fairsRes, appsRes]) => {
+      supabase.from('fair_segmentos').select('fair_id,segmento_id'),
+    ]).then(([fairsRes, appsRes, segsRes]) => {
       if (!ativo) return
       if (fairsRes.error) console.error('VendorApply: falha ao carregar feiras', fairsRes.error)
       if (appsRes.error) console.error('VendorApply: falha ao carregar inscrições', appsRes.error)
+      if (segsRes.error) console.error('VendorApply: falha ao carregar segmentos da feira', segsRes.error)
       const ativos = new Set(
         (appsRes.data ?? [])
           .filter((a) => STATUS_ATIVOS.includes(a.status))
           .map((a) => a.fair_id as string)
       )
+      const mapa: Record<string, string[]> = {}
+      for (const row of segsRes.data ?? []) {
+        const fairId = row.fair_id as string
+        const segId = row.segmento_id as string
+        if (!mapa[fairId]) mapa[fairId] = []
+        mapa[fairId].push(segId)
+      }
+      setSegmentosPorFeira(mapa)
       setFairIdsInscritos(ativos)
       setFairs((fairsRes.data ?? []) as Fair[])
       setLoadingFairs(false)
@@ -129,9 +145,18 @@ export default function VendorApply() {
     return () => { ativo = false }
   }, [user?.id])
 
+  const selectedBusiness = useMemo(
+    () => businesses.find((b) => b.id === selectedBusinessId) ?? null,
+    [businesses, selectedBusinessId],
+  )
+
   const fairsVisiveis = useMemo(
-    () => fairs.filter((f) => !fairIdsInscritos.has(f.id)),
-    [fairs, fairIdsInscritos]
+    () =>
+      fairs.filter((f) => {
+        if (fairIdsInscritos.has(f.id)) return false
+        return feiraAceitaSegmento(segmentosPorFeira[f.id] ?? [], selectedBusiness?.segmento_id)
+      }),
+    [fairs, fairIdsInscritos, segmentosPorFeira, selectedBusiness],
   )
 
   const selectedFair = useMemo(
@@ -157,6 +182,7 @@ export default function VendorApply() {
   const selecionarFeira = (fairId: string) => {
     setSelectedFairId(fairId)
     setSelectedDate('')
+    setRespostas({})
   }
 
   const podeAvancar =
@@ -165,8 +191,18 @@ export default function VendorApply() {
   const avancar = () => setStep((s) => Math.min(s + 1, 2))
   const voltar = () => setStep((s) => Math.max(s - 1, 0))
 
+  const perguntasFair = useMemo(
+    () => sanitizarPerguntas(selectedFair?.perguntas),
+    [selectedFair],
+  )
+
   const enviar = async () => {
     if (!user?.id || !selectedBusinessId || !selectedFairId || !dateValido || !aceite) return
+    const respostasOk = montarRespostas(perguntasFair, respostas)
+    if (!respostasOk.ok) {
+      setSubmitError(respostasOk.error)
+      return
+    }
     setSubmitting(true)
     setSubmitError(null)
     const { error } = await supabase.from('applications').insert({
@@ -176,6 +212,7 @@ export default function VendorApply() {
       data_escolhida: selectedDate,
       status: 'pendente',
       aceite_termos: true,
+      respostas: respostasOk.respostas,
     })
     setSubmitting(false)
     if (error) {
@@ -354,6 +391,21 @@ export default function VendorApply() {
                 <p><strong>Parque:</strong> {selectedFair.parks?.nome ?? '—'}</p>
                 <p><strong>Data:</strong> {formatarDataBR(selectedDate)}</p>
                 <p><strong>Taxa:</strong> {formatarMoeda(selectedFair.taxa)}</p>
+              </div>
+            )}
+            {perguntasFair.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-marca-ink">Perguntas da feira</h3>
+                {perguntasFair.map((p) => (
+                  <div key={p.id}>
+                    <label className="mb-1 block text-sm font-medium text-marca-ink">{p.rotulo}</label>
+                    <input
+                      className={inputBase}
+                      value={respostas[p.id] ?? ''}
+                      onChange={(e) => setRespostas((r) => ({ ...r, [p.id]: e.target.value }))}
+                    />
+                  </div>
+                ))}
               </div>
             )}
             {profile?.curadoria_status !== 'aprovado' && (

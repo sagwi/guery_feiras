@@ -39,18 +39,37 @@ export async function completarOnboarding(userId: string): Promise<void> {
 
   const { negocio } = onboarding
 
-  const { error: businessError } = await supabase.from('businesses').insert({
-    user_id: userId,
-    nome: negocio.nomeMarca,
-    segmento: negocio.segmento,
-    descricao: negocio.descricao,
-    instagram: negocio.possuiInstagram ? (negocio.instagram ?? null) : null,
-    faixa_faturamento: negocio.faixaFaturamento,
-  })
+  const { data: business, error: businessError } = await supabase
+    .from('businesses')
+    .insert({
+      user_id: userId,
+      nome: negocio.nomeMarca,
+      segmento: negocio.segmento,
+      segmento_id: negocio.segmentoId || null,
+      nicho_id: negocio.nichoId || null,
+      descricao: negocio.descricao,
+      instagram: negocio.possuiInstagram ? (negocio.instagram ?? null) : null,
+      faixa_faturamento: negocio.faixaFaturamento,
+    })
+    .select('id')
+    .single()
 
-  if (businessError) {
+  if (businessError || !business) {
     console.error('completarOnboarding: falha ao inserir business', businessError)
     return
+  }
+
+  const produtos = (negocio.produtos ?? []).map((nome, ordem) => ({
+    business_id: business.id,
+    nome,
+    ordem,
+  }))
+  if (produtos.length > 0) {
+    const { error: prodError } = await supabase.from('business_produtos').insert(produtos)
+    if (prodError) {
+      console.error('completarOnboarding: falha ao inserir produtos', prodError)
+      return
+    }
   }
 
   const { error: termosError } = await supabase.from('termos_aceite').insert([

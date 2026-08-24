@@ -13,7 +13,7 @@ Atualizado em 2026-08-24 (repo de demonstração espelhando features da Vamo).
 ## Estado atual
 
 - Repo: `sagwi/guery_feiras`
-- Branch de trabalho recente: `cursor/demo-clone-vamobeta-ecf6`
+- Branch de trabalho recente: `cursor/demo-vamo-parity-9b5d`
 - Remoto: `origin/main`
 - Demo deploy: https://guery-feiras.vercel.app
 - Vercel project: `guery-feiras`
@@ -31,6 +31,22 @@ Atualizado em 2026-08-24 (repo de demonstração espelhando features da Vamo).
 - **Nota:** o GitHub App deste agente só enxerga `sagwi/guery_feiras` — não há acesso
   ao repositório privado `vamobeta` / `Vamo-mercado-criativo`. A parity foi feita a
   partir do app em produção da Vamo + este código-base, sem tocar na infra Vamo.
+
+## Feito em 2026-08-24 (continuação — nicho, perguntas, mobile)
+
+- Migration `0013` (aditiva, schema `guery_feiras`): SELECT anon em `segmentos`/`nichos`;
+  drop do CHECK de `businesses.segmento`; `businesses.segmento_id` / `nicho_id`;
+  `fairs.perguntas`; `applications.respostas`; tabela `fair_segmentos` + RLS;
+  seed de 6 nichos demo.
+- Cadastro/edição de negócio: catálogo de segmento/nicho + chips de produtos
+  (`NegocioForm`, `StepNegocio`, `completarOnboarding`).
+- Nova feira (curadoria): segmentos permitidos + até 10 perguntas; inscrição do
+  expositor responde as perguntas; aba Reações no detalhe da feira.
+- Inscrição filtra feiras pelos segmentos do negócio (`fair_segmentos` vazio = todas).
+- Menu mobile (drawer) no painel do comerciante e da curadoria.
+- **Fora desta fatia:** upload em Storage (bucket compartilhado; capas/avisos seguem URL);
+  clone 1:1 do source Vamo (GitHub App sem acesso); edição de perguntas no detalhe da feira;
+  PWA / Turnstile / tokens Anton-Jost.
 
 ## Segurança de produção
 

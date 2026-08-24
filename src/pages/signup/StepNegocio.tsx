@@ -1,15 +1,21 @@
 import { z } from 'zod'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect, useMemo, useState } from 'react'
 import * as Checkbox from '@radix-ui/react-checkbox'
-import { Check } from 'lucide-react'
-import { SEGMENTOS, FAIXAS_FATURAMENTO } from '../../lib/segmentos'
+import { Check, X } from 'lucide-react'
+import { FAIXAS_FATURAMENTO } from '../../lib/segmentos'
+import { supabase } from '../../lib/supabase'
+import { nichoObrigatorio, validarNichoComId } from '../../lib/nichoObrigatorio'
 
 export const negocioSchema = z.object({
   nomeMarca: z.string().min(1, 'Informe o nome da marca'),
   possuiInstagram: z.boolean(),
   instagram: z.string().optional(),
-  segmento: z.enum(SEGMENTOS, { error: 'Selecione um segmento' }),
+  segmento: z.string().min(1, 'Selecione um segmento'),
+  segmentoId: z.string().optional(),
+  nichoId: z.string().optional(),
+  produtos: z.array(z.string()),
   descricao: z.string().min(1, 'Descreva seu negócio'),
   faixaFaturamento: z.enum(FAIXAS_FATURAMENTO, { error: 'Selecione uma faixa' }),
 }).refine((d) => !d.possuiInstagram || !!d.instagram?.trim(), {
@@ -26,6 +32,9 @@ const erro = 'mt-1 text-sm text-marca-coral'
 const checkboxRoot =
   'h-5 w-5 shrink-0 rounded-[6px] border border-marca-ink/30 flex items-center justify-center transition-colors data-[state=checked]:border-marca-acao data-[state=checked]:bg-marca-acao'
 
+type SegmentoRow = { id: string; nome: string; ativo: boolean }
+type NichoRow = { id: string; segmento_id: string; nome: string; ativo: boolean }
+
 export default function StepNegocio({
   defaultValues,
   onNext,
@@ -35,21 +44,81 @@ export default function StepNegocio({
   onNext: (data: NegocioData) => void
   onBack: () => void
 }) {
+  const [segmentos, setSegmentos] = useState<SegmentoRow[]>([])
+  const [nichos, setNichos] = useState<NichoRow[]>([])
+  const [novoProduto, setNovoProduto] = useState('')
+  const [erroExtra, setErroExtra] = useState<string | null>(null)
+
   const {
     register,
     handleSubmit,
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<NegocioData>({
     resolver: zodResolver(negocioSchema),
-    defaultValues: { possuiInstagram: false, ...defaultValues },
+    defaultValues: { possuiInstagram: false, produtos: [], ...defaultValues },
   })
 
   const possuiInstagram = watch('possuiInstagram')
+  const segmentoId = watch('segmentoId') ?? ''
+  const nichoId = watch('nichoId') ?? ''
+  const produtos = watch('produtos') ?? []
+
+  useEffect(() => {
+    let vivo = true
+    Promise.all([
+      supabase.from('segmentos').select('id,nome,ativo').eq('ativo', true).order('nome'),
+      supabase.from('nichos').select('id,segmento_id,nome,ativo').eq('ativo', true).order('nome'),
+    ]).then(([s, n]) => {
+      if (!vivo) return
+      setSegmentos((s.data ?? []) as SegmentoRow[])
+      setNichos((n.data ?? []) as NichoRow[])
+    })
+    return () => {
+      vivo = false
+    }
+  }, [])
+
+  const nichosDoSegmento = useMemo(
+    () => nichos.filter((n) => n.segmento_id === segmentoId && n.ativo),
+    [nichos, segmentoId],
+  )
+  const exigeNicho = nichoObrigatorio(segmentoId, nichos)
+
+  function escolherSegmento(id: string) {
+    setValue('segmentoId', id)
+    setValue('nichoId', '')
+    setValue('segmento', segmentos.find((s) => s.id === id)?.nome ?? '', { shouldValidate: true })
+  }
+
+  function addProduto() {
+    const nome = novoProduto.trim()
+    if (!nome || produtos.includes(nome)) {
+      setNovoProduto('')
+      return
+    }
+    setValue('produtos', [...produtos, nome])
+    setNovoProduto('')
+  }
+
+  function avancar(data: NegocioData) {
+    const nichoErro = validarNichoComId(data.segmentoId || null, data.nichoId || null, nichos)
+    if (nichoErro) {
+      setErroExtra(nichoErro)
+      return
+    }
+    if ((data.produtos ?? []).length === 0) {
+      setErroExtra('Inclua pelo menos um produto.')
+      return
+    }
+    setErroExtra(null)
+    onNext(data)
+  }
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit(onNext)}>
+    <form className="space-y-4" onSubmit={handleSubmit(avancar)}>
       <div>
         <label className={label}>Nome da marca</label>
         <input className={input} {...register('nomeMarca')} />
@@ -88,13 +157,72 @@ export default function StepNegocio({
 
       <div>
         <label className={label}>Segmento</label>
-        <select className={input} {...register('segmento')}>
+        <select className={input} value={segmentoId} onChange={(e) => escolherSegmento(e.target.value)}>
           <option value="">Selecione...</option>
-          {SEGMENTOS.map((s) => (
-            <option key={s} value={s}>{s}</option>
+          {segmentos.map((s) => (
+            <option key={s.id} value={s.id}>{s.nome}</option>
           ))}
         </select>
+        <input type="hidden" {...register('segmento')} />
         {errors.segmento && <p className={erro}>{errors.segmento.message}</p>}
+      </div>
+
+      {exigeNicho && (
+        <div>
+          <label className={label}>Nicho</label>
+          <select
+            className={input}
+            value={nichoId}
+            onChange={(e) => setValue('nichoId', e.target.value)}
+          >
+            <option value="">Selecione...</option>
+            {nichosDoSegmento.map((n) => (
+              <option key={n.id} value={n.id}>{n.nome}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div>
+        <label className={label}>Produtos</label>
+        <div className="flex gap-2">
+          <input
+            className={input}
+            value={novoProduto}
+            placeholder="Ex.: vela de soja"
+            onChange={(e) => setNovoProduto(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addProduto()
+              }
+            }}
+          />
+          <button
+            type="button"
+            onClick={addProduto}
+            className="shrink-0 rounded-xl border border-marca-acao/30 px-3 text-sm font-semibold text-marca-acao"
+          >
+            Adicionar
+          </button>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {produtos.map((p) => (
+            <span
+              key={p}
+              className="inline-flex items-center gap-1 rounded-full bg-marca-acao/10 px-2.5 py-1 text-xs font-semibold text-marca-acao"
+            >
+              {p}
+              <button
+                type="button"
+                aria-label={`Remover ${p}`}
+                onClick={() => setValue('produtos', produtos.filter((x) => x !== p))}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
       </div>
 
       <div>
@@ -129,6 +257,7 @@ export default function StepNegocio({
           Próximo
         </button>
       </div>
+      {erroExtra && <p className={erro}>{erroExtra}</p>}
     </form>
   )
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { negocioFormSchema } from './NegocioForm'
+import { negocioFormSchema } from './negocioForm.schema'
 
 const base = {
   nome: 'Loja da Ana',

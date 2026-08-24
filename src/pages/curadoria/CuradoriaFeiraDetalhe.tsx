@@ -52,6 +52,7 @@ type Fair = {
   horario: string | null
   categorias: string[] | null
   status: FairStatus
+  perguntas?: { id: string; rotulo: string }[] | null
   parks: { id: string; nome: string } | null
 }
 
@@ -75,6 +76,16 @@ type Payment = {
   application_id: string
   valor: number
   status: string
+  criado_em: string
+}
+
+type Reacao = {
+  id: string
+  application_id: string
+  nota_feira: number
+  comentario: string | null
+  nota_indicacao: number
+  faixa_faturamento: string
   criado_em: string
 }
 
@@ -127,6 +138,7 @@ export default function CuradoriaFeiraDetalhe() {
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([])
   const [perfis, setPerfis] = useState<Record<string, Perfil>>({})
   const [payments, setPayments] = useState<Payment[]>([])
+  const [reacoes, setReacoes] = useState<Reacao[]>([])
   const [form, setForm] = useState<FormState>({
     nome: '',
     park_id: '',
@@ -166,7 +178,7 @@ export default function CuradoriaFeiraDetalhe() {
       supabase
         .from('fairs')
         .select(
-          'id,park_id,nome,local,descricao,regras,imagem_url,taxa,max_participantes,dias_semana,data_inicio,data_fim,horario,categorias,status,parks(id,nome)',
+          'id,park_id,nome,local,descricao,regras,imagem_url,taxa,max_participantes,dias_semana,data_inicio,data_fim,horario,categorias,status,perguntas,parks(id,nome)',
         )
         .eq('id', id)
         .single(),
@@ -224,6 +236,18 @@ export default function CuradoriaFeiraDetalhe() {
               setPayments((data ?? []) as Payment[])
             })
         : Promise.resolve(),
+      supabase
+        .from('reacoes_feira')
+        .select('id,application_id,nota_feira,comentario,nota_indicacao,faixa_faturamento,criado_em')
+        .eq('fair_id', id)
+        .order('criado_em', { ascending: false })
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('CuradoriaFeiraDetalhe: falha ao carregar reações', error)
+            return
+          }
+          setReacoes((data ?? []) as Reacao[])
+        }),
     ])
 
     setLoading(false)
@@ -541,6 +565,14 @@ export default function CuradoriaFeiraDetalhe() {
           </Tabs.Trigger>
           <Tabs.Trigger value="financeiro" className={ui.tabTrigger}>
             Financeiro
+          </Tabs.Trigger>
+          <Tabs.Trigger value="reacoes" className={ui.tabTrigger}>
+            Reações
+            {reacoes.length > 0 && (
+              <span className="ml-1 rounded-full bg-marca-ink/10 px-1.5 py-0.5 text-[10px] font-bold">
+                {reacoes.length}
+              </span>
+            )}
           </Tabs.Trigger>
           <Tabs.Trigger value="detalhes" className={ui.tabTrigger}>
             Detalhes
@@ -878,6 +910,36 @@ export default function CuradoriaFeiraDetalhe() {
                 </tbody>
               </table>
             </div>
+          </div>
+        </Tabs.Content>
+
+        <Tabs.Content value="reacoes" className="space-y-4 pt-5">
+          <h3 className="font-display text-[17px] font-bold text-marca-ink">
+            Reações pós-feira · {reacoes.length}
+          </h3>
+          {reacoes.length === 0 && (
+            <p className={ui.empty}>Nenhuma reação enviada ainda.</p>
+          )}
+          <div className="space-y-2">
+            {reacoes.map((r) => {
+              const insc = inscricoes.find((i) => i.id === r.application_id)
+              return (
+                <article key={r.id} className={`${ui.card} ${ui.cardBody} space-y-1`}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-display font-semibold text-marca-ink">
+                      {insc?.businesses?.nome ?? 'Expositor'}
+                    </p>
+                    <p className="text-xs text-marca-ink/50">
+                      Feira {r.nota_feira}/10 · Indicação {r.nota_indicacao}/10
+                    </p>
+                  </div>
+                  <p className="text-sm text-marca-ink/70">{r.faixa_faturamento}</p>
+                  {r.comentario && (
+                    <p className="text-sm text-marca-ink/80">{r.comentario}</p>
+                  )}
+                </article>
+              )
+            })}
           </div>
         </Tabs.Content>
 

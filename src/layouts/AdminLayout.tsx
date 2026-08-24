@@ -1,6 +1,14 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { Users, ClipboardCheck, CalendarDays, BarChart3, MessageSquareWarning } from 'lucide-react'
+import {
+  Users,
+  ClipboardCheck,
+  CalendarDays,
+  BarChart3,
+  MessageSquareWarning,
+  Megaphone,
+  Settings,
+} from 'lucide-react'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 
@@ -8,8 +16,10 @@ const itensAdmin = [
   { to: '/curadoria', label: 'Cadastros', icon: Users },
   { to: '/curadoria/inscricoes', label: 'Inscrições', icon: ClipboardCheck },
   { to: '/curadoria/feiras', label: 'Feiras', icon: CalendarDays },
+  { to: '/curadoria/avisos', label: 'Avisos', icon: Megaphone },
   { to: '/curadoria/indicadores', label: 'Indicadores', icon: BarChart3 },
   { to: '/curadoria/suporte', label: 'Suporte', icon: MessageSquareWarning },
+  { to: '/curadoria/definicoes', label: 'Definições', icon: Settings },
 ]
 
 export default function AdminLayout() {

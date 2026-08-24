@@ -1,20 +1,41 @@
 # Guery Feiras - HANDOFF
 
-Atualizado em 2026-07-17 (hifi curadoria).
+Atualizado em 2026-08-24 (repo de demonstração espelhando features da Vamo).
+
+## Papel deste repositório
+
+- **Demo / showcase** com branding Guery Feiras (marca GF em texto, sem logos da Vamo).
+- Dados de exemplo (contas `@demo.gueryfeiras.dev`, avisos, segmentos/nichos seed).
+- A produção **Vamô! Mercado Criativo** (`vamomercadocriativo.com.br`, projeto Supabase
+  `jbtiajldbpqyohzcrjfx`, schema `vamo`) é **intocável** a partir daqui — repo e infra
+  separados. Não alterar Edge Functions, Auth global nem o projeto Vamo.
 
 ## Estado atual
 
-- Repo: `/Users/brenooliveira/Downloads/Claude code`
-- Branch: `main`
+- Repo: `sagwi/guery_feiras`
+- Branch de trabalho recente: `cursor/demo-clone-vamobeta-ecf6`
 - Remoto: `origin/main`
-- Produção: https://guery-feiras.vercel.app
+- Demo deploy: https://guery-feiras.vercel.app
 - Vercel project: `guery-feiras`
-- Supabase usado pelo app: `pyyyrzwdidcronhidkwb`
+- Supabase usado pelo app: `pyyyrzwdidcronhidkwb` (BreninjaDB)
 - Schema do app: `guery_feiras`
+
+## Feito em 2026-08-24 (demo ↔ parity Vamo)
+
+- Migration `0012`: `avisos`, `aviso_reacoes`, `segmentos`, `nichos`,
+  `business_produtos`, `reacoes_feira`; `parks.endereco` / `parks.regras`.
+- Telas: `/curadoria/avisos`, `/curadoria/definicoes`, `/VendorReacao/:applicationId`.
+- Home do expositor: feed de avisos + CTA de reação pós-feira.
+- Seed: 3 avisos, 3 segmentos, 6 nichos, curtidas demo; parks com endereço/regras.
+- Branding auth: copy Guery Feiras (sem emojis de marketing genérico).
+- **Nota:** o GitHub App deste agente só enxerga `sagwi/guery_feiras` — não há acesso
+  ao repositório privado `vamobeta` / `Vamo-mercado-criativo`. A parity foi feita a
+  partir do app em produção da Vamo + este código-base, sem tocar na infra Vamo.
 
 ## Segurança de produção
 
-Este Supabase é compartilhado com outras operações em produção. Não tratar como sandbox.
+Este Supabase (BreninjaDB) é compartilhado com outras operações. Não tratar como sandbox
+cego — mas o schema `guery_feiras` é o escopo deste app demo.
 
 Regras antes de qualquer mudança:
 

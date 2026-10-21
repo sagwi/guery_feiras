@@ -1,10 +1,27 @@
+## Migração PC — 2026-10-21
+
+Kit central: repositório privado `dev-context` (kit de restore + skills + Obsidian). Path local padronizado: `~/dev/guery_feiras`.
+
+| Campo | Valor |
+| --- | --- |
+| Clone | `git clone git@github.com:sagwi/guery_feiras.git ~/dev/guery_feiras` |
+| Branch | `main` |
+| Último commit conhecido | `HEAD` (2026-07-17) |
+| Inventário | `INVENTARIO.md` no kit `dev-context` |
+
+**Restore no PC novo:** copiar `.env` do 1Password → `npm i` → smoke deste HANDOFF. Senhas demo ficam no cofre (não repetir aqui).
+
+- Legado https://guery-feiras.vercel.app · schema `guery_feiras` · Stripe pendências no HANDOFF.
+
+---
+
 # Guery Feiras - HANDOFF
 
 Atualizado em 2026-07-17 (hifi curadoria).
 
 ## Estado atual
 
-- Repo: `/Users/brenooliveira/Downloads/Claude code`
+- Repo: `~/dev/guery_feiras`
 - Branch: `main`
 - Remoto: `origin/main`
 - Produção: https://guery-feiras.vercel.app
@@ -82,7 +99,7 @@ Regras antes de qualquer mudança:
   reutilizáveis (prop `itens` e `role`) em vez de duplicar layout — `AdminLayout` usa os
   dois com badge "Curador" no topo.
 
-- Acesso de teste criado: `teste.stripe@guery.dev` / `teste123456` — comerciante com
+- Acesso de teste criado: `teste.stripe@guery.dev` / `ver 1Password (rotacionar)` — comerciante com
   negócio cadastrado e inscrição **aprovada** em "Feira de Sábado da Jaqueira" (R$ 200,
   pronta pra testar o botão Pagar). `gf_admin=false` (é conta de comerciante, não admin).
 
@@ -140,7 +157,7 @@ Criados diretamente no Auth do Supabase `pyyyrzwdidcronhidkwb`, com autorizaçã
   - `gf_admin`: false
   - `curadoria_status`: aprovado
 
-- `teste.stripe@guery.dev` / `teste123456`
+- `teste.stripe@guery.dev` / `ver 1Password (rotacionar)`
   - Tipo: comerciante (conta de teste, criada via SQL — ver skill `supabase-breninja`)
   - Negócio: "Comerciante Teste Stripe"
   - Tem inscrição **aprovada** em "Feira de Sábado da Jaqueira" (R$ 200) — pronta pra testar o Checkout da Stripe

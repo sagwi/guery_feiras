@@ -1,3 +1,99 @@
+# Handoff de migração de computador | 21/10/2026
+
+<!-- migration-handoff-2026-10-21 -->
+
+Autor: Codex. Tarefa: MIGRACAO-PC-2026-10-21. Próximo responsável: Breno e agente no novo PC.
+
+## Estado verificado localmente
+
+- Pasta de origem: `/Users/brenooliveira/Documents/ProjetosDEV/Claude code`. No destino, adaptar o caminho à nova máquina.
+- Branch: `main`.
+- HEAD: `f68da13930ce55a60b55943d25aa6e8771119597`.
+- Evidência: consultas locais de Git e arquivos em 21/10/2026 (America/Recife). Nenhum fetch, push, commit, deploy ou operação de banco executado. Referências remotas abaixo são o cache local e podem estar desatualizadas.
+- Verificação desta entrega: documental. Build, testes de aplicação e estado de produção não foram revalidados. As validações do histórico continuam datadas.
+
+## Atenção para a transferência
+
+- Estado completo dos arquivos não confirmado: git status falhou ou excedeu 12 segundos. Não tratar este checkout como limpo; disponibilizar os arquivos do iCloud e repetir a conferência antes de apagar o PC antigo.
+
+### Remotos configurados
+
+```text
+origin	https://github.com/sagwi/guery_feiras.git (fetch)
+origin	https://github.com/sagwi/guery_feiras.git (push)
+```
+
+### Upstream
+
+```text
+origin/main
+```
+
+### Commits à frente / atrás do upstream local
+
+```text
+0	6
+```
+
+### Alterações existentes antes desta atualização
+
+```text
+INDISPONÍVEL: timeout de leitura
+```
+
+### Branches locais
+
+```text
+fatia-1 38adb22 fix: propaga erros de query (checagem de onboarding + carga de profile)
+  fatia-2 92894bc feat: Painel lista propostas reais + KPIs por status
+  fatia-3 18a4d8e feat: sino de notificações real (contador + marcar todas)
+  fatia-4 4758db3 feat: painel reflete pagamento (KPIs + ação Pagar no card)
+  fatia-5 d16d42c feat: /VendorWallet + cancelar data gera crédito + pagar com crédito
+* main    f68da13 [origin/main: behind 6] docs: atualiza HANDOFF com Stripe Checkout e redesenho da curadoria (2026-07-15)
+```
+
+### Worktrees vinculados
+
+```text
+/Users/brenooliveira/Documents/ProjetosDEV/Claude code f68da13 [main]
+```
+
+### Stashes
+
+```text
+Nenhum registro retornado.
+```
+
+### Últimos commits locais
+
+```text
+f68da13 2026-07-15 docs: atualiza HANDOFF com Stripe Checkout e redesenho da curadoria (2026-07-15)
+36766d6 2026-07-09 docs: CLAUDE.md do projeto + HANDOFF atualizado (estado 2026-07-09)
+abd06e4 2026-07-09 feat: observabilidade de erro (Sentry)
+cddd4c1 2026-07-09 test: E2E (Playwright) do login/redirect por papel — sob demanda
+d3b49c9 2026-07-09 feat: canal de suporte real (problem_reports + aba Suporte na curadoria)
+```
+
+## Ambiente e retomada
+
+- Arquivos de ambiente encontrados (somente nomes, valores não lidos): `.env.local`, `.env.example`.
+- Manifests/lockfiles encontrados: `package-lock.json`.
+- Ler no destino: `README.md`, `AGENTS.md`, `CLAUDE.md`.
+- Metadados do package.json: `{"name": "guery-feiras"}`.
+- Scripts disponíveis (nomes; revisar implementação antes de executar): `dev`, `build`, `test`, `test:e2e`, `preview`.
+
+1. Preservar arquivos modificados, não rastreados, stashes, branches locais e o histórico `.git`. Clonar apenas o remoto não recupera esses itens nem esta atualização ainda sem commit. Conferir também arquivos ignorados e assets, que não aparecem no status comum.
+2. Transferir configurações e segredos por meio privado. Reautenticar GitHub, hospedagem e conectores no novo PC; não colocar credenciais no handoff ou em commits. Preservar as instruções pessoais de AGENTS.md e notas de projeto necessárias fora deste repositório.
+3. Worktrees dependem do repositório principal e podem conter caminhos absolutos em `.git`. Preservar cada árvore de arquivos e reconstruir seus vínculos no destino antes de desenvolver. Links simbólicos de node_modules não são instalações portáveis.
+4. Conferir README, versão de runtime, gerenciador e lockfile; restaurar dependências no destino. Revisar scripts de instalação/teste antes de rodar: alguns projetos acessam banco real, aplicam migrações ou publicam. Não executar esses efeitos como parte automática da migração.
+5. Comparar HEAD, branches e alterações com este registro; conferir os handoffs históricos para pendências funcionais. Executar as verificações locais apropriadas depois de restaurar o ambiente. Só considerar a transferência concluída após confirmar os arquivos e fluxos necessários no novo PC.
+
+## Histórico anterior preservado
+
+Os registros abaixo mantêm suas datas e escopos originais; alegações de publicação ou testes não foram revalidadas em 21/10/2026.
+
+---
+
 # Guery Feiras - HANDOFF
 
 Atualizado em 2026-07-15.
@@ -203,3 +299,20 @@ Existe um log menor pré-existente:
 - `AuthProvider` pode logar "falha ao carregar profile" em reload completo por uma corrida entre `.single()` e refresh de sessão.
 
 Não foi tratado nesta rodada.
+
+## Migração de máquina (2026-10-21): Mac → Windows
+
+- Pasta no Mac: `/Users/brenooliveira/Documents/ProjetosDEV/Claude code`
+- Branch de trabalho no Mac: `main` (upstream: origin/main)
+- Trabalho não commitado (9 itens) salvo na branch **`wip/migracao-2026-10-21`**, baseada em `main`. Áreas: graphify-out/ (39), .maestri/ (3), supabase/ (1), src/ (1), HANDOFF.md (1), CLAUDE.md (1).
+- Commits que não estavam no remoto: nenhum
+
+- Último commit antes da migração: f68da13 2026-07-15 docs: atualiza HANDOFF com Stripe Checkout e redesenho da curadoria (2026-07-15)
+- Arquivos `.env` locais que **não** foram versionados e precisam ser recriados: .env.local 
+- Variáveis esperadas (nomes, do .env example): VITE_SENTRY_DSN VITE_SUPABASE_ANON_KEY VITE_SUPABASE_URL 
+
+### Retomar no Windows
+1. `gh repo clone` (ou `clone-repos.ps1` do repo `sagwi/dev-ambiente`), depois `git switch wip/migracao-2026-10-21`.
+2. Revise o diff contra `main` e quebre em commits/PR antes de levar para a branch principal. A branch WIP **não** vai para produção.
+3. Recrie os `.env` (`vercel env pull` ou painel Supabase/Vercel) e rode `npm install` + build/testes do projeto.
+4. Contexto detalhado: seções anteriores deste HANDOFF e o vault SegundoCerebro (restaurado de `sagwi/dev-ambiente`).

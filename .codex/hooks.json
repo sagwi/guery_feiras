@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cp ~/.claude/projects/-Users-brenooliveira-Downloads-Claude-code/memory/*.md ~/Documents/SegundoCerebro/Memoria/ 2>/dev/null; echo '{\"systemMessage\": \"Memória sincronizada com o Obsidian (Memoria/)\"}'",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

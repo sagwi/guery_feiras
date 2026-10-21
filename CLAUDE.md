@@ -19,7 +19,7 @@ flag `gf_admin`). Produção real com usuários reais: https://guery-feiras.verc
 Vite + React 18 + TypeScript + Tailwind + react-hook-form/zod + Supabase + Vercel + Stripe (test mode) + Sentry.
 
 - `npm run dev` — dev server em :5173
-- `npm run build` — type-check (`tsc -b`) + build. **Tem que passar antes de qualquer commit.**
+- `npm run build` — type-check (`tsc -b`) + build. **Obrigatório para mudanças de código/configuração; documentação isolada exige revisão de conteúdo e referências.**
 - `npm run test` — vitest (testes unitários de `src/lib` e schemas zod)
 - `npm run test:e2e` — Playwright, **sob demanda apenas** (ver regra abaixo)
 
@@ -64,8 +64,8 @@ placeholder — o CI nunca toca rede/banco. E2E fica fora do CI de propósito.
 ## Edge Functions (Stripe)
 
 - Vivem em `supabase/functions/` (`stripe-checkout`, `stripe-webhook`), rodam em Deno.
-- **Deploy é separado do app**: push na Vercel NÃO atualiza Edge Function. Mudou função →
-  deploy via MCP Supabase `deploy_edge_function` (confirmar `project_ref` antes).
+- **Deploy é separado do app**: push na Vercel NÃO atualiza Edge Function. Mudou função: preparar
+  deploy via MCP Supabase `deploy_edge_function`; executar somente com aprovação explícita e confirmação do `project_ref`.
 - Secrets delas (`STRIPE_SECRET_KEY`, webhook secret) vivem nos secrets do Supabase,
   não nas env vars `VITE_*` da Vercel.
 - Regra de ouro: valor e dono da cobrança são recalculados no servidor;
@@ -116,17 +116,15 @@ Lembrete: Edge Function alterada precisa de deploy próprio (seção acima).
 
 ## Definition of done — checar antes de dizer "pronto"
 
-1. `npm run build` passa (inclui type-check).
-2. `npm run test` passa; lógica nova em `src/lib` tem teste.
-3. Fluxo tocado foi exercitado de verdade no browser (dev server ou produção) — não
-   só "compilou". "Deve funcionar" é proibido.
+1. Código/configuração: `npm run build` passa (inclui type-check). Documentação isolada: conteúdo, referências e formato conferidos.
+2. Código/configuração: `npm run test` passa; lógica nova em `src/lib` tem teste. Reutilizar evidência desta tarefa somente se entradas e código pertinente não mudaram.
+3. Mudança de UI/comportamento: exercitar o fluxo alterado no browser, em ambiente autorizado. Compilação não prova o fluxo; "deve funcionar" é proibido.
 4. Mexeu em banco? Migration numerada commitada + Advisors verificados + RLS na tabela nova.
 5. Mexeu em auth/RLS/menu? `npm run test:e2e` rodado e verde.
-6. Mexeu em Edge Function? `deploy_edge_function` feito e fluxo de pagamento testado.
+6. Mexeu em Edge Function? Preparar a publicação separada. Após autorização explícita, publicar e testar o fluxo de pagamento no ambiente autorizado; até lá, registrar a etapa pendente.
 7. Deploy feito? Smoke test em produção feito.
 8. Trabalho relevante fechado? `HANDOFF.md` atualizado (estado, contas, pendências).
 
 ## Como retomar o projeto
 
-Ler `HANDOFF.md` + `git log --oneline -15` antes de qualquer código; apresentar
-estado + próximos passos primeiro. (Skill `retomar-projeto` cobre isso.)
+Ao retomar, consultar o HANDOFF pertinente, alterações locais e histórico Git suficiente para o pedido. Se a tarefa já estiver escolhida, continuar no escopo autorizado; apresentar opções quando faltar uma decisão. (Skill `retomar-projeto` cobre isso.)
